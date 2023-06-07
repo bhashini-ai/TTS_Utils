@@ -9,8 +9,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 public class CommandLineOptions {
-	Options options = new Options();
-	BooleanOption help = new BooleanOption("h", "help", "Print usage");
+	public Options options = new Options();
+	public BooleanOption help = new BooleanOption("h", "help", "Print usage");
 
 	public CommandLineOptions() {
 		options.addOption(help);
