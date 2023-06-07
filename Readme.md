@@ -5,4 +5,7 @@
 3) Open command prompt and change to TTS_Utils directory
 
 4) Run TrimAndNormalizeAudio.bat as below:
+
+```
 .\TrimAndNormalizeAudio.bat -in <path-of-directory-containing-WAV-files-to-be-trimmed> -out <output-directory-where-trimmed-WAV-files-are-to-be-saved> -bps 24 -sr 48000
+```
