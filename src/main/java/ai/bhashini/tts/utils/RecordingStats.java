@@ -57,7 +57,7 @@ public class RecordingStats {
 		File[] wavFiles = new File(wavDir).listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.endsWith(".wav");
+				return name.endsWith(".wav") && !name.startsWith("._");
 			}
 		});
 		if (wavFiles != null) {
@@ -92,13 +92,14 @@ public class RecordingStats {
 		}
 		Arrays.sort(subDirs);
 		System.out.println("WavDir:\t#Sentences\tDuration");
+		int offset = dataDir.getAbsolutePath().length() + 1;
 		for (File subDir : subDirs) {
 			File wavDir = new File(subDir, "wav");
 			if (wavDir.exists()) {
 				RecordingStats recordingStats = new RecordingStats();
 				recordingStats.loadStats(wavDir.getAbsolutePath());
-				System.out.println(wavDir.getAbsolutePath() + ":\t" + recordingStats.getNumRecordings() + "\t"
-						+ recordingStats.totalDurationAsString());
+				System.out.println(wavDir.getAbsolutePath().substring(offset) + ":\t"
+						+ recordingStats.getNumRecordings() + "\t" + recordingStats.totalDurationAsString());
 				totalRecordingStats.add(recordingStats);
 			}
 		}
