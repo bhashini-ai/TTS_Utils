@@ -67,7 +67,7 @@ public class FileUtils {
 		File[] wavFiles = new File(inputDir).listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File file) {
-				return file.getName().endsWith(".wav");
+				return file.getName().endsWith(".wav") && !file.getName().startsWith("._");
 			}
 		});
 		Arrays.sort(wavFiles, new Comparator<File>() {
