@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -38,12 +37,8 @@ public class CreateSentenceLevelTextFiles {
 			}
 			File txtDir = new File(subDir, "txt");
 			txtDir.mkdirs();
-			File[] wavFiles = wavDir.listFiles(new FilenameFilter() {
-				@Override
-				public boolean accept(File dir, String name) {
-					return name.endsWith(".wav") && !name.startsWith("._");
-				}
-			});
+			
+			File[] wavFiles = FileUtils.getWavFiles(wavDir);
 			for (File wavFile : wavFiles) {
 				String fileName = FileUtils.getFileNameWithoutExtension(wavFile, "wav");
 				int index2 = fileName.lastIndexOf('_');

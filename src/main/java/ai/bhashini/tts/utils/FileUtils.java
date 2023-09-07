@@ -63,8 +63,12 @@ public class FileUtils {
 		}
 	}
 
-	public static File[] getWavFiles(String inputDir) {
-		File[] wavFiles = new File(inputDir).listFiles(new FileFilter() {
+	public static File[] getWavFiles(String inputDirPath) {
+		return getWavFiles(new File(inputDirPath));
+	}
+
+	public static File[] getWavFiles(File inputDir) {
+		File[] wavFiles = inputDir.listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File file) {
 				return file.getName().endsWith(".wav") && !file.getName().startsWith("._");

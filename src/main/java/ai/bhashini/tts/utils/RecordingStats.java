@@ -2,7 +2,6 @@ package ai.bhashini.tts.utils;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FilenameFilter;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -54,12 +53,7 @@ public class RecordingStats {
 	public void loadStats(String wavDir) {
 		total = Duration.ofSeconds(0);
 		wavFilesAndDurations.clear();
-		File[] wavFiles = new File(wavDir).listFiles(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.endsWith(".wav") && !name.startsWith("._");
-			}
-		});
+		File[] wavFiles = FileUtils.getWavFiles(wavDir);
 		if (wavFiles != null) {
 			for (File wavFile : wavFiles) {
 				add(wavFile.getAbsolutePath(), false);
