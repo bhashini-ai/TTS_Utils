@@ -74,12 +74,14 @@ public class FileUtils {
 				return file.getName().endsWith(".wav") && !file.getName().startsWith("._");
 			}
 		});
-		Arrays.sort(wavFiles, new Comparator<File>() {
-			@Override
-			public int compare(File o1, File o2) {
-				return o1.getName().compareTo(o2.getName());
-			}
-		});
+		if (wavFiles != null) {
+			Arrays.sort(wavFiles, new Comparator<File>() {
+				@Override
+				public int compare(File o1, File o2) {
+					return o1.getName().compareTo(o2.getName());
+				}
+			});
+		}
 		return wavFiles;
 	}
 }
