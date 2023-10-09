@@ -6,6 +6,7 @@ import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class MergeRecordedScript {
 
@@ -45,6 +46,7 @@ public class MergeRecordedScript {
 						return name.endsWith(".txt");
 					}
 				});
+				Arrays.sort(txtFiles);
 				for (File txtFile : txtFiles) {
 					String sentenceId = FileUtils.getFileNameWithoutExtension(txtFile, "txt");
 					if (sentenceId.startsWith(prefix)) {
