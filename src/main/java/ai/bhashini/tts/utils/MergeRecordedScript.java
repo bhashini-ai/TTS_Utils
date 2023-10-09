@@ -34,6 +34,7 @@ public class MergeRecordedScript {
 		if (subDirs == null) {
 			return;
 		}
+		Arrays.sort(subDirs);
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
 			for (File subDir : subDirs) {
 				File txtDir = new File(subDir, "txt");
