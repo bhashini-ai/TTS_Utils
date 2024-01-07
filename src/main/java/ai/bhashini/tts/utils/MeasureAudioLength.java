@@ -3,6 +3,7 @@ package ai.bhashini.tts.utils;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.apache.commons.cli.ParseException;
@@ -47,6 +48,7 @@ public class MeasureAudioLength {
 					return file.isDirectory();
 				}
 			});
+			Arrays.sort(subDirs);
 			for (File subDir : subDirs) {
 				File wavDir = new File(subDir, "wav");
 				if (wavDir.exists()) {
