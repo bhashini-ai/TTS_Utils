@@ -51,6 +51,11 @@ public class CommandLineOptions {
 			this.setType(String.class);
 		}
 
+		public StringOption(String option, String longOption, String description, String defaultValue) throws IllegalArgumentException {
+			this(option, longOption, description);
+			strValue = defaultValue;
+		}
+
 		public String getStringValue() {
 			return strValue;
 		}
