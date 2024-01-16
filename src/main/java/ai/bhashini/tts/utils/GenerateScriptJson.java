@@ -46,7 +46,6 @@ public class GenerateScriptJson {
 
 	public static void generateScriptJson(String projectId, String language, File scriptFile) {
 		File jsonFile = new File(scriptFile.getParent(), language + ".json");
-		System.out.println("Creating " + jsonFile.getAbsolutePath() + " ...");
 		ArrayList<Sentence> sentences = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(new FileReader(scriptFile));
 				BufferedWriter bw = new BufferedWriter(new FileWriter(jsonFile))) {
@@ -63,6 +62,7 @@ public class GenerateScriptJson {
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();
 			String scriptJson = gson.toJson(script);
 			bw.write(scriptJson);
+			System.out.println("Created " + jsonFile.getAbsolutePath());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -107,7 +107,7 @@ public class GenerateScriptJson {
 	public static void main(String[] args) {
 		String projectId = "AI4Bharat";
 		String language = "Bodo";
-		File scriptFile = new File("C:/TTS_Speech_Recording_AI4Bharat/Bodo_Conv.tsv");
+		File scriptFile = new File("C:/TTS_Speech_Recording_AI4Bharat/Bodo_Conv_Updated.tsv");
 		generateScriptJson(projectId, language, scriptFile);
 	}
 
