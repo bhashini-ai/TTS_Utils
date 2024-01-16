@@ -36,7 +36,7 @@ public class RecordingStats {
 		if (!normalizedWavFile.exists() || modified) {
 			TrimAndNormalizeAudio.trim(wavPath, normalizedWavFile.getAbsolutePath());
 		}
-		double secs = MeasureAudioLength.getAudioLengthInSecs(normalizedWavFile.getAbsolutePath(), null);
+		double secs = MeasureAudioLength.getAudioLengthInSecs(normalizedWavFile.getAbsolutePath());
 		return Duration.ofMillis(Math.round(secs * 1000));
 	}
 

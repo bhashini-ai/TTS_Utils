@@ -81,6 +81,10 @@ public class MeasureAudioLength {
 		systemTime.tock(true);
 	}
 
+	public static double getAudioLengthInSecs(String wavFilePath) {
+		return getAudioLengthInSecs(wavFilePath, null, false, "");
+	}
+
 	public static double getAudioLengthInSecs(String wavFilePath, HashMap<String, Integer> samplingRates,
 			boolean verboseOutput, String prefix) {
 		try {
