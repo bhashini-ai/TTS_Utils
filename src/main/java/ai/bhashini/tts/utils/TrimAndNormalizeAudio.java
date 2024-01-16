@@ -34,6 +34,8 @@ public class TrimAndNormalizeAudio {
 				"Silences at the beginning and the end below this will be cutoff");
 		IntegerOption silencePadding = new IntegerOption("sil", "silence-padding", SILENCE_PADDING,
 				"Amount of silence (hop-length * silence-padding) to be added at the beginning and end of audio after trimming");
+		BooleanOption skipTrimming = new BooleanOption("st", "skip-trim", "Skip trimming of audio files");
+		BooleanOption skipNormalization = new BooleanOption("sn", "skip-normalize", "Skip normalization of audio files");
 
 		public Arguments() {
 			super();
@@ -47,6 +49,8 @@ public class TrimAndNormalizeAudio {
 			options.addOption(hopLength);
 			options.addOption(cutoffDB);
 			options.addOption(silencePadding);
+			options.addOption(skipTrimming);
+			options.addOption(skipNormalization);
 		}
 	}
 
@@ -65,16 +69,17 @@ public class TrimAndNormalizeAudio {
 		File[] inputWavFiles = FileUtils.getWavFiles(arguments.inputDir.getStringValue());
 		String inputDirName = new File(arguments.inputDir.getStringValue()).getName() + "/";
 		String outputDirName = new File(arguments.outputDir.getStringValue()).getName() + "/";
-		String padStr = "%0" + (inputWavFiles.length + "").length() + "d/" + inputWavFiles.length + ": ";
+		String fileCountFormat = "%0" + (inputWavFiles.length + "").length() + "d/" + inputWavFiles.length + ": ";
 		for (int i = 0; i < inputWavFiles.length; i++) {
 			File inputWavFile = inputWavFiles[i];
 			File outputWavFile = new File(arguments.outputDir.getStringValue(), inputWavFile.getName());
-			System.out.printf("\r%s", String.format(padStr, i + 1) + inputDirName + inputWavFile.getName() + " -> "
+			System.out.printf("\r%s", String.format(fileCountFormat, i + 1) + inputDirName + inputWavFile.getName() + " -> "
 					+ outputDirName + outputWavFile.getName());
 			trim(inputWavFile.getAbsolutePath(), outputWavFile.getAbsolutePath(),
 					arguments.newSamplingRate.getIntValue(), arguments.newBitsPerSample.getIntValue(),
 					arguments.windowLength.getIntValue(), arguments.hopLength.getIntValue(),
-					arguments.cutoffDB.getIntValue(), arguments.silencePadding.getIntValue());
+					arguments.cutoffDB.getIntValue(), arguments.silencePadding.getIntValue(),
+					arguments.skipTrimming.getBoolValue(), arguments.skipNormalization.getBoolValue());
 		}
 		System.out.println("");
 		sysTime.tock(true);
@@ -92,16 +97,19 @@ public class TrimAndNormalizeAudio {
 
 	public static void trim(String inputWavFilePath, String outputWavFilePath) {
 		trim(inputWavFilePath, outputWavFilePath, NEW_SAMPLING_RATE, NEW_BITS_PER_SAMPLE, WINDOW_LENGTH, HOP_LENGTH,
-				CUTOFF_DB, SILENCE_PADDING);
+				CUTOFF_DB, SILENCE_PADDING, false, false);
 	}
 
 	public static void trim(String inputWavFilePath, String outputWavFilePath, int newSamplingRate,
-			int newBitsPerSample, int windowLength, int hopLength, int cutoffDB, int silencePadding) {
+			int newBitsPerSample, int windowLength, int hopLength, int cutoffDB, int silencePadding,
+			boolean skipTrimming, boolean skipNormalization) {
 		try {
 			double[] wavData = getResampledWavData(inputWavFilePath, newSamplingRate, newBitsPerSample);
-			normalize(wavData);
-			double[] trimmedData = OverlappingWindow.trimSilences(wavData, windowLength, hopLength, cutoffDB, silencePadding);
-			saveWavData(outputWavFilePath, trimmedData, newSamplingRate, newBitsPerSample);
+			normalize(wavData, skipNormalization, newBitsPerSample);
+			if (!skipTrimming) {
+				wavData = OverlappingWindow.trimSilences(wavData, windowLength, hopLength, cutoffDB, silencePadding);
+			}
+			saveWavData(outputWavFilePath, wavData, newSamplingRate, newBitsPerSample);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (UnsupportedAudioFileException e) {
@@ -126,9 +134,15 @@ public class TrimAndNormalizeAudio {
 		return wavData;
 	}
 
-	public static void normalize(double[] wavData) {
-		double max = getAbsMax(wavData);
-		double mul = 0.9999 / max;
+	public static void normalize(double[] wavData, boolean skipNormalization, int newBitsPerSample) {
+		double mul;
+		if (skipNormalization) {
+			double max = Math.pow(2, newBitsPerSample - 1);
+			mul = 1.0 / max;
+		} else {
+			double max = getAbsMax(wavData);
+			mul = 0.9999 / max;
+		}
 		for (int i = 0; i < wavData.length; i++) {
 			wavData[i] *= mul;
 		}
