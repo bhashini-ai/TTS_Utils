@@ -3,6 +3,7 @@ package ai.bhashini.tts.utils;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -12,15 +13,18 @@ public class MeasureAudioLength {
 	public static class Arguments extends CommandLineOptions {
 		StringOption inputDir = new StringOption("in", "input-dir",
 				"Input directory in which the length of each .wav file will be measured");
-		StringOption recursive = new StringOption("r", "recursive",
-				"Measure WAV files in each of the <child-dir>/wav directories", "wav");
+		BooleanOption recursive = new BooleanOption("r", "recursive",
+				"Measure WAV files in each of the <child-dir>/<sub-dir> directories");
 		BooleanOption verbose = new BooleanOption("v", "verbose", "Also print the length of each .wav file");
+		StringOption subDirName = new StringOption("sub", "sub-dir",
+				"Name of the sub-directory within <child-dirs> for recursive measuring of WAV file lengths", "wav");
 
 		public Arguments() {
 			super();
 			inputDir.setRequired(true);
 			options.addOption(inputDir);
 			options.addOption(recursive);
+			options.addOption(subDirName);
 			options.addOption(verbose);
 		}
 	}
@@ -36,10 +40,11 @@ public class MeasureAudioLength {
 			return;
 		}
 		String inputDir = arguments.inputDir.getStringValue();
-		String recursive = arguments.recursive.getStringValue();
+		boolean recursive = arguments.recursive.getBoolValue();
+		String subDirName = arguments.subDirName.getStringValue();
 		boolean verboseOutput = arguments.verbose.getBoolValue();
 
-		if (recursive == null) {
+		if (!recursive) {
 			printAudioLength(inputDir, verboseOutput);
 		} else {
 			File[] subDirs = new File(inputDir).listFiles(new FileFilter() {
@@ -50,7 +55,7 @@ public class MeasureAudioLength {
 			});
 			Arrays.sort(subDirs);
 			for (File subDir : subDirs) {
-				File wavDir = new File(subDir, recursive);
+				File wavDir = new File(subDir, subDirName);
 				if (wavDir.exists()) {
 					printAudioLength(wavDir.getAbsolutePath(), verboseOutput);
 				}
@@ -64,13 +69,13 @@ public class MeasureAudioLength {
 		File[] wavFiles = FileUtils.getWavFiles(inputDir);
 		String fileCountFormat = "%0" + (wavFiles.length + "").length() + "d/" + wavFiles.length + ": ";
 		double totalLengthInSecs = 0.0;
+		System.out.println("\nWAV Dir = " + inputDir);
 		for (int i = 0; i < wavFiles.length; i++) {
 			File wavFile = wavFiles[i];
 			String fileCountPrefix = String.format(fileCountFormat, i + 1);
 			double length = getAudioLengthInSecs(wavFile.getAbsolutePath(), samplingRates, verboseOutput, fileCountPrefix);
 			totalLengthInSecs += length;
 		}
-		System.out.println("\nWAV Dir = " + inputDir);
 		System.out.println("Total length = " + SystemTime.toHrsMinsSecs(totalLengthInSecs));
 		for (String samplingRateInfo : samplingRates.keySet()) {
 			int count = samplingRates.get(samplingRateInfo);
@@ -84,6 +89,8 @@ public class MeasureAudioLength {
 	public static double getAudioLengthInSecs(String wavFilePath) {
 		return getAudioLengthInSecs(wavFilePath, null, false, "");
 	}
+
+	static DecimalFormat df = new DecimalFormat("00.0");
 
 	public static double getAudioLengthInSecs(String wavFilePath, HashMap<String, Integer> samplingRates,
 			boolean verboseOutput, String prefix) {
@@ -103,8 +110,9 @@ public class MeasureAudioLength {
 			}
 			double lengthInSecs = 1.0 * numFrames / sampleRate;
 			if (verboseOutput) {
-				String name = new File(wavFilePath).getName();
-				System.out.println(prefix + name + " " + samplingRateInfo + ", " + wavFilePath + "=" + lengthInSecs);
+				String filename = new File(wavFilePath).getName();
+				String lengthStr = "Length(secs)=" + df.format(lengthInSecs);
+				System.out.println(prefix + filename + " " + samplingRateInfo + ", " + lengthStr);
 			} else {
 				// System.out.printf("\r%s", prefix);
 			}
