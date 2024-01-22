@@ -23,6 +23,14 @@ public class FileUtils {
         return fileName.substring(0, fileName.lastIndexOf("." + extension));
     }
 
+	public static String getFileNameWithoutExtension(String fileName) {
+		int end = fileName.lastIndexOf('.');
+		if (end == -1) {
+			return fileName;
+		}
+		return fileName.substring(0, end);
+    }
+
     public static String getFileContents(String filePath) {
         StringBuffer strBuffer = new StringBuffer();
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
