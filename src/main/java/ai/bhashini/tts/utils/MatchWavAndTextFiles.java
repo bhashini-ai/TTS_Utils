@@ -3,48 +3,92 @@ package ai.bhashini.tts.utils;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
+import java.util.Arrays;
+
+import org.apache.commons.cli.ParseException;
 
 public class MatchWavAndTextFiles {
+	public static class Arguments extends CommandLineOptions {
+		StringOption inputDir = new StringOption("in", "input-dir",
+				"Input directory in which each of <child-dir>/wav/*.wav and <child-dir>/txt/*.txt files will be matched");
+		StringOption filenamePrefix = new StringOption("pre", "filename-prefix",
+				"Only those txt/wav files containing this filename-prefix will be matched");
+		BooleanOption removeUnmatched = new BooleanOption("rm", "remove-unmatched",
+				"Each of the unmatched txt or wav files will be moved to <child-dir>/skipped directory");
+		BooleanOption verbose = new BooleanOption("v", "verbose", "Print each matching pair");
+		StringOption wavDirName = new StringOption("w", "wav-dir",
+				"Name of the sub-directory within <child-dirs> for finding WAV files (default = wav)", "wav");
+
+		public Arguments() {
+			super();
+			inputDir.setRequired(true);
+			filenamePrefix.setRequired(true);
+			options.addOption(inputDir);
+			options.addOption(filenamePrefix);
+			options.addOption(removeUnmatched);
+			options.addOption(verbose);
+			options.addOption(wavDirName);
+		}
+	}
 
 	public static void main(String[] args) {
-		String baseDir = args[0];
-		String prefix = args[1];
-		File[] subDirs = new File(baseDir).listFiles(new FileFilter() {
+		Arguments arguments = new Arguments();
+		try {
+			arguments.parse(args);
+			arguments.printValues();
+		} catch (ParseException e) {
+			e.printStackTrace();
+			arguments.printHelp(MeasureAudioLength.class.getCanonicalName());
+			return;
+		}
+		String inputDir = arguments.inputDir.getStringValue();
+		String filenamePrefix = arguments.filenamePrefix.getStringValue();
+		boolean removeUnmatched = arguments.removeUnmatched.getBoolValue();
+		boolean verboseOutput = arguments.verbose.getBoolValue();
+		String wavDirName = arguments.wavDirName.getStringValue();
+
+		File[] subDirs = new File(inputDir).listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File file) {
 				return file.isDirectory();
 			}
 		});
+		Arrays.sort(subDirs);
 		for (File subDir : subDirs) {
 			System.out.println(subDir);
 			File txtDir = new File(subDir, "txt");
-			File wavDir = new File(subDir, "wav");
+			File wavDir = new File(subDir, wavDirName);
 			File extrasDir = new File(subDir, "skipped");
 			if (txtDir.exists() && wavDir.exists()) {
-				match(wavDir, txtDir, extrasDir, prefix, ".wav", ".txt");
-				match(txtDir, wavDir, extrasDir, prefix, ".txt", ".wav");
+				match(wavDir, txtDir, extrasDir, filenamePrefix, ".wav", ".txt", removeUnmatched, verboseOutput);
+				match(txtDir, wavDir, extrasDir, filenamePrefix, ".txt", ".wav", removeUnmatched, verboseOutput);
 			}
 		}
 	}
 
 	static void match(File srcDir, File dstDir, File extrasDir, final String srcPrefix, final String srcExtn,
-			String dstExtn) {
+			String dstExtn, boolean removeUnmatched, boolean verboseOutput) {
 		File[] srcFiles = srcDir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.startsWith(srcPrefix) && name.endsWith(srcExtn);
+				return name.toLowerCase().startsWith(srcPrefix) && name.endsWith(srcExtn);
 			}
 		});
+		Arrays.sort(srcFiles);
 		for (File srcFile : srcFiles) {
 			File dstFile = new File(dstDir, srcFile.getName().replace(srcExtn, dstExtn));
 			if (!dstFile.exists()) {
 				System.out.println("No " + dstExtn + " file for " + srcFile.getAbsolutePath());
-				if (!extrasDir.exists()) {
-					extrasDir.mkdir();
+				if (removeUnmatched) {
+					if (!extrasDir.exists()) {
+						extrasDir.mkdir();
+					}
+					srcFile.renameTo(new File(extrasDir, srcFile.getName()));
 				}
-				srcFile.renameTo(new File(extrasDir, srcFile.getName()));
 			} else {
-				System.out.println("\t" + srcFile.getName() + "->" + dstFile.getName());
+				if (verboseOutput) {
+					System.out.println("\t" + srcFile.getName() + "->" + dstFile.getName());
+				}
 			}
 		}
 	}
