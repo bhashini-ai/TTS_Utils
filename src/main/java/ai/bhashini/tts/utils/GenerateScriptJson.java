@@ -92,12 +92,15 @@ public class GenerateScriptJson {
 
 	static Sentence createSentence(String line) {
 		String[] contents = line.split("\t");
-		if (contents.length != 3) {
+		if (contents.length < 2) {
 			System.out.println("Skipping: " + line);
 			return null;
 		}
 		String sentenceId = contents[0];
-		String sentenceText = contents[1] + "\n" + contents[2];
+		String sentenceText = contents[1];
+		if (contents.length > 2) {
+			sentenceText += "\n" + contents[2];
+		}
 		if (!line.isEmpty()) {
 			return new Sentence(sentenceId, sentenceText);
 		}
@@ -107,7 +110,7 @@ public class GenerateScriptJson {
 	public static void main(String[] args) {
 		String projectId = "AI4Bharat";
 		String language = "Bodo";
-		File scriptFile = new File("C:/TTS_Speech_Recording_AI4Bharat/Bodo_Conv_Updated.tsv");
+		File scriptFile = new File("C:/TTS_Speech_Recording_AI4Bharat/Bodo_Male_Script.tsv");
 		generateScriptJson(projectId, language, scriptFile);
 	}
 
