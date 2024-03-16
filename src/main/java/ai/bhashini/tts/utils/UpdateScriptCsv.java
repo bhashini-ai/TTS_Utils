@@ -3,7 +3,6 @@ package ai.bhashini.tts.utils;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
@@ -99,39 +98,26 @@ public class UpdateScriptCsv {
 	}
 
 	void updateScript(String recordingsDir) {
-		File[] subDirs = new File(recordingsDir).listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File file) {
-				return file.isDirectory() && !file.getName().equalsIgnoreCase("filelists")
-						&& !file.getName().equalsIgnoreCase("wavs") && !file.getName().equalsIgnoreCase("evaluation");
-			}
-		});
-		if (subDirs == null) {
+		File txtDir = new File(recordingsDir, "txt");
+		if (!txtDir.exists()) {
 			return;
 		}
-		Arrays.sort(subDirs);
-		for (File subDir : subDirs) {
-			File txtDir = new File(subDir, "txt");
-			if (!txtDir.exists()) {
-				continue;
+		System.out.println("Checking " + txtDir.getAbsolutePath());
+		File[] txtFiles = txtDir.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.endsWith(".txt");
 			}
-			System.out.println("Checking " + subDir.getAbsolutePath());
-			File[] txtFiles = txtDir.listFiles(new FilenameFilter() {
-				@Override
-				public boolean accept(File dir, String name) {
-					return name.endsWith(".txt");
-				}
-			});
-			Arrays.sort(txtFiles);
-			for (File txtFile : txtFiles) {
-				String id = FileUtils.getFileNameWithoutExtension(txtFile, "txt");
-				ScriptFields scriptFields = sentences.get(id);
-				if (scriptFields != null) {
-					String scriptSentence = scriptFields.sentence;
-					String recordedSentence = FileUtils.getFileContents(txtFile.getAbsolutePath()).split("\n")[0];
-					if (!scriptSentence.equals(recordedSentence)) {
-						scriptFields.sentence = recordedSentence;
-					}
+		});
+		Arrays.sort(txtFiles);
+		for (File txtFile : txtFiles) {
+			String id = FileUtils.getFileNameWithoutExtension(txtFile, "txt");
+			ScriptFields scriptFields = sentences.get(id);
+			if (scriptFields != null) {
+				String scriptSentence = scriptFields.sentence;
+				String recordedSentence = FileUtils.getFileContents(txtFile.getAbsolutePath()).split("\n")[0];
+				if (!scriptSentence.equals(recordedSentence)) {
+					scriptFields.sentence = recordedSentence;
 				}
 			}
 		}
@@ -139,8 +125,7 @@ public class UpdateScriptCsv {
 
 	public static void main(String[] args) {
 		String tsvFilePath = args[0];
-		String newCsvFilePath = args[1];
-		String recordingsDir = args[2];
+		String recordingsDir = args[1];
 
 		UpdateScriptCsv updateScriptCsv = new UpdateScriptCsv();
 
@@ -152,8 +137,9 @@ public class UpdateScriptCsv {
 		updateScriptCsv.updateScript(recordingsDir);
 		System.out.println("Updating complete.\n");
 
-		updateScriptCsv.saveScriptCsv(newCsvFilePath);
-		System.out.println("Created " + newCsvFilePath);
+		String csvFilePath = tsvFilePath.replace(".tsv", ".csv");
+		updateScriptCsv.saveScriptCsv(csvFilePath);
+		System.out.println("Created " + csvFilePath);
 	}
 
 }
