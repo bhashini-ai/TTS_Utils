@@ -18,12 +18,13 @@ public class UpdateScriptCsv {
 		String sentence;
 		String language;
 		String speaker;
+		String style;
 		String category;
 
-		private static String[] fieldsOfInterest = new String[] { "ID", "Sentence", "language", "speaker", "category" };
+		private static String[] fieldsOfInterest = new String[] { "ID", "Sentence", "language", "speaker", "style", "category" };
 
 		public static String getHeader() {
-			return "ID,Sentence,language,speaker,category";
+			return "ID,Sentence,language,speaker,style,category";
 		}
 
 		public ScriptFields(String[] contents, HashMap<String, Integer> fieldIndices) {
@@ -31,12 +32,14 @@ public class UpdateScriptCsv {
 			this.sentence = contents[fieldIndices.get("Sentence")];
 			this.language = contents[fieldIndices.get("language")];
 			this.speaker = contents[fieldIndices.get("speaker")];
+			this.style = contents[fieldIndices.get("style")];
 			this.category = contents[fieldIndices.get("category")];
 		}
 
 		@Override
 		public String toString() {
-			return id + ",\"" + sentence + "\"," + language + "," + speaker + "," + category;
+			String csvCompatibleSentence = "\"" + sentence.replace("\"", "\"\"") + "\"";
+			return id + "," + csvCompatibleSentence + "," + language + "," + speaker + "," + style + "," + category;
 		}
 
 		public static HashMap<String, Integer> getFieldIndices(String[] headerContents) {
