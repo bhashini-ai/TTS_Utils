@@ -71,7 +71,7 @@ public class MatchWavAndTextFiles {
 		File[] srcFiles = srcDir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.toLowerCase().startsWith(srcPrefix) && name.endsWith(srcExtn);
+				return name.startsWith(srcPrefix) && name.endsWith(srcExtn);
 			}
 		});
 		Arrays.sort(srcFiles);
