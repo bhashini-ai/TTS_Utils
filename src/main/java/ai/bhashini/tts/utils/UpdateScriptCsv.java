@@ -78,8 +78,13 @@ public class UpdateScriptCsv {
 				return;
 			}
 			while ((line = br.readLine()) != null) {
-				ScriptFields scriptFields = new ScriptFields(line.split("\t"), fieldIndices);
-				sentences.put(scriptFields.id, scriptFields);
+				try {
+					ScriptFields scriptFields = new ScriptFields(line.split("\t"), fieldIndices);
+					sentences.put(scriptFields.id, scriptFields);
+				} catch (Exception e) {
+					System.out.println("Error in line: " + line);
+					e.printStackTrace();
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
