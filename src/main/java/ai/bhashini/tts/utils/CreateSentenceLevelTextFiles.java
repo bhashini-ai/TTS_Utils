@@ -45,7 +45,7 @@ public class CreateSentenceLevelTextFiles {
 				try {
 					int sentenceNumber = Integer.parseInt(fileName.substring(index2 + 1));
 					String subFileName = fileName.substring(0, index2);
-					String category = subFileName.substring(subFileName.lastIndexOf('_') + 1);
+					String category = subFileName.substring(subFileName.lastIndexOf('_') + 1).toLowerCase();
 					HashMap<Integer, String> sentences = categoryWiseSentences.get(category);
 					if (sentences == null) {
 						System.out.println("Couldn't find text for category: " + category);
