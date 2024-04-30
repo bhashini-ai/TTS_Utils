@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class MergeRecordedScript {
@@ -14,7 +15,8 @@ public class MergeRecordedScript {
 		String outputDirPath = args[1];
 		String prefix = args[2];
 		new File(outputDirPath).mkdirs();
-		String[] categories = { "agri", "education", "finance", "general", "health", "other", "politics", "weather", "iitm" };
+		File scriptsDir = new File(inputDirPath, "script");
+		ArrayList<String> categories = CreateSentenceLevelTextFiles.getScriptCategories(scriptsDir, ".txt");
 		for (String category : categories) {
 			String outputFilePath = new File(outputDirPath, category + ".txt").getAbsolutePath();
 			System.out.println("Creating " + outputFilePath);
@@ -40,9 +42,7 @@ public class MergeRecordedScript {
 				for (File txtFile : txtFiles) {
 					String sentenceId = FileUtils.getFileNameWithoutExtension(txtFile, "txt");
 					if (sentenceId.startsWith(prefix)) {
-						int sentenceNumber = Integer.parseInt(sentenceId.substring(prefix.length()));
-						bw.write(String.format("%04d", sentenceNumber) + "\t"
-								+ FileUtils.getFileContents(txtFile.getAbsolutePath()) + "\n");
+						bw.write(sentenceId + "\t" + FileUtils.getFileContents(txtFile.getAbsolutePath()) + "\n");
 					}
 				}
 			}
