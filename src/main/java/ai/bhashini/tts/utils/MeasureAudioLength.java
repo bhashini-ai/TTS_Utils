@@ -1,10 +1,8 @@
 package ai.bhashini.tts.utils;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import org.apache.commons.cli.ParseException;
@@ -47,13 +45,7 @@ public class MeasureAudioLength {
 		if (!recursive) {
 			printAudioLength(inputDir, verboseOutput);
 		} else {
-			File[] subDirs = new File(inputDir).listFiles(new FileFilter() {
-				@Override
-				public boolean accept(File file) {
-					return file.isDirectory();
-				}
-			});
-			Arrays.sort(subDirs);
+			File[] subDirs = MatchWavAndTextFiles.getSubDirs(new File(inputDir));
 			for (File subDir : subDirs) {
 				File wavDir = new File(subDir, subDirName);
 				if (wavDir.exists()) {

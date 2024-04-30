@@ -47,13 +47,7 @@ public class MatchWavAndTextFiles {
 		boolean verboseOutput = arguments.verbose.getBoolValue();
 		String wavDirName = arguments.wavDirName.getStringValue();
 
-		File[] subDirs = new File(inputDir).listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File file) {
-				return file.isDirectory();
-			}
-		});
-		Arrays.sort(subDirs);
+		File[] subDirs = getSubDirs(new File(inputDir));
 		for (File subDir : subDirs) {
 			System.out.println(subDir);
 			File txtDir = new File(subDir, "txt");
@@ -64,6 +58,24 @@ public class MatchWavAndTextFiles {
 				match(txtDir, wavDir, extrasDir, filenamePrefix, ".txt", ".wav", removeUnmatched, verboseOutput);
 			}
 		}
+	}
+
+	public static File[] getSubDirs(File inputDir) {
+		File[] subDirs = inputDir.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				return file.isDirectory() && !file.getName().equalsIgnoreCase("filelists")
+						&& !file.getName().equalsIgnoreCase("wavs") && !file.getName().equalsIgnoreCase("evaluation")
+						&& !file.getName().equalsIgnoreCase("script");
+			}
+		});
+		if (subDirs == null) {
+			subDirs = new File[0];
+		}
+		if (subDirs.length > 1) {
+			Arrays.sort(subDirs);
+		}
+		return subDirs;
 	}
 
 	static void match(File srcDir, File dstDir, File extrasDir, final String srcPrefix, final String srcExtn,

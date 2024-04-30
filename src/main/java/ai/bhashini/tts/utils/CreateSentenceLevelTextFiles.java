@@ -2,7 +2,6 @@ package ai.bhashini.tts.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -21,15 +20,7 @@ public class CreateSentenceLevelTextFiles {
 			categoryWiseSentences.put(category, sentences);
 		}
 		String recordingsDir = args[1];
-		File[] subDirs = new File(recordingsDir).listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File file) {
-				return file.isDirectory();
-			}
-		});
-		if (subDirs == null) {
-			return;
-		}
+		File[] subDirs = MatchWavAndTextFiles.getSubDirs(new File(recordingsDir));
 		for (File subDir : subDirs) {
 			File wavDir = new File(subDir, "wav");
 			if (!wavDir.exists()) {
