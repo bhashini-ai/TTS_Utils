@@ -1,9 +1,7 @@
 package ai.bhashini.tts.utils;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.HashMap;
 
 public class RecordingStats {
@@ -75,16 +73,7 @@ public class RecordingStats {
 	public static void main(String[] args) {
 		File dataDir = new File(args[0]);
 		RecordingStats totalRecordingStats = new RecordingStats();
-		File[] subDirs = dataDir.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File file) {
-				return file.isDirectory();
-			}
-		});
-		if (subDirs == null) {
-			return;
-		}
-		Arrays.sort(subDirs);
+		File[] subDirs = MatchWavAndTextFiles.getSubDirs(dataDir);
 		System.out.println("WavDir:\t#Sentences\tDuration");
 		int offset = dataDir.getAbsolutePath().length() + 1;
 		for (File subDir : subDirs) {
