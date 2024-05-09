@@ -14,7 +14,7 @@ import java.util.HashMap;
 
 import org.apache.commons.cli.ParseException;
 
-public class CreateFilelistsForFastPitchTraining {
+public class CreateFileListsForFastPitchTraining {
 	ArrayList<String> wavFileNames = new ArrayList<>();
 	HashMap<String, String> wavTextMapping = new HashMap<String, String>();
 
@@ -38,13 +38,13 @@ public class CreateFilelistsForFastPitchTraining {
 			arguments.printValues();
 		} catch (ParseException e) {
 			e.printStackTrace();
-			arguments.printHelp(CreateFilelistsForFastPitchTraining.class.getCanonicalName());
+			arguments.printHelp(CreateFileListsForFastPitchTraining.class.getCanonicalName());
 			return;
 		}
 		String audioTextFileListPath = arguments.audioTextFileList.getStringValue();
 		String recordingsDirPath = arguments.recordingsDir.getStringValue();
 		if (audioTextFileListPath == null && recordingsDirPath == null) {
-			arguments.printHelp(CreateFilelistsForFastPitchTraining.class.getCanonicalName());
+			arguments.printHelp(CreateFileListsForFastPitchTraining.class.getCanonicalName());
 			System.out.println("Specify one of the options: --" + arguments.audioTextFileList.getLongOpt() + " or --"
 					+ arguments.recordingsDir.getLongOpt());
 			return;
@@ -57,7 +57,7 @@ public class CreateFilelistsForFastPitchTraining {
 				return;
 			}
 			System.out.println("Processing " + arguments.audioTextFileList);
-			CreateFilelistsForFastPitchTraining createFilelistsForTraining = new CreateFilelistsForFastPitchTraining();
+			CreateFileListsForFastPitchTraining createFilelistsForTraining = new CreateFileListsForFastPitchTraining();
 			createFilelistsForTraining.loadAudioTextFile(audioTextFileListPath, null);
 			createFilelistsForTraining.createFilelists(new File(audioTextFile.getParentFile(), "filelists"));
 		} else {
@@ -67,7 +67,7 @@ public class CreateFilelistsForFastPitchTraining {
 				return;
 			}
 			System.out.println("Processing " + arguments.recordingsDir);
-			CreateFilelistsForFastPitchTraining createFilelistsForTraining = new CreateFilelistsForFastPitchTraining();
+			CreateFileListsForFastPitchTraining createFilelistsForTraining = new CreateFileListsForFastPitchTraining();
 			createFilelistsForTraining.loadWavTextMapping(recordingsDir);
 			System.out.println("Found " + createFilelistsForTraining.wavFileNames.size()
 					+ " audio recordings and corresponding transcripts");

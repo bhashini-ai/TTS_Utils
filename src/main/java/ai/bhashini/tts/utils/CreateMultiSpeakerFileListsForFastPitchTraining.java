@@ -4,7 +4,7 @@ import java.io.File;
 
 import org.apache.commons.cli.ParseException;
 
-public class CreateMultiSpeakerFilelistsForFastPitchTraining {
+public class CreateMultiSpeakerFileListsForFastPitchTraining {
 
 	public static class Arguments extends CommandLineOptions {
 		StringOption inputDir = new StringOption("dir", "filelists-directory",
@@ -27,13 +27,13 @@ public class CreateMultiSpeakerFilelistsForFastPitchTraining {
 			arguments.printValues();
 		} catch (ParseException e) {
 			e.printStackTrace();
-			arguments.printHelp(CreateMultiSpeakerFilelistsForFastPitchTraining.class.getCanonicalName());
+			arguments.printHelp(CreateMultiSpeakerFileListsForFastPitchTraining.class.getCanonicalName());
 			return;
 		}
 		String inputDir = arguments.inputDir.getStringValue();
 		int numSpeakers = arguments.numSpeakers.getIntValue();
 
-		CreateFilelistsForFastPitchTraining createFilelistsForTraining = new CreateFilelistsForFastPitchTraining();
+		CreateFileListsForFastPitchTraining createFilelistsForTraining = new CreateFileListsForFastPitchTraining();
 		for (int s = 0; s < numSpeakers; s++) {
 			String filelistPath = inputDir + "/" + s + ".txt";
 			System.out.println("Processing speaker " + s + " filelist: " + filelistPath);
