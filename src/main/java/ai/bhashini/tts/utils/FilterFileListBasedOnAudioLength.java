@@ -79,6 +79,12 @@ public class FilterFileListBasedOnAudioLength {
 					wavName = "wavs/" + wavName;
 				}
 				String wavFilePath = new File(datasetPath, wavName).getAbsolutePath();
+				if (!new File(wavFilePath).exists()) {
+					String logInfo = "Skipping non-existing wav file: " + wavFilePath + "\n";
+					log.write(logInfo);
+					System.out.print(logInfo);
+					continue;
+				}
 				double lenInSecs = MeasureAudioLength.getAudioLengthInSecs(wavFilePath);
 				if (lenInSecs >= minLengthInSecs && lenInSecs <= maxLengtInSecs) {
 					bw.write(line + "\n");
