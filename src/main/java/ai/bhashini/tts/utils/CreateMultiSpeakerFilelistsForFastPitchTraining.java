@@ -27,7 +27,7 @@ public class CreateMultiSpeakerFilelistsForFastPitchTraining {
 			arguments.printValues();
 		} catch (ParseException e) {
 			e.printStackTrace();
-			arguments.printHelp(MeasureAudioLength.class.getCanonicalName());
+			arguments.printHelp(CreateMultiSpeakerFilelistsForFastPitchTraining.class.getCanonicalName());
 			return;
 		}
 		String inputDir = arguments.inputDir.getStringValue();
