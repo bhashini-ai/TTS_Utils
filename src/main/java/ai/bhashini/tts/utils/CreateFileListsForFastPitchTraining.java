@@ -80,13 +80,15 @@ public class CreateFileListsForFastPitchTraining {
 			String line;
 			while ((line = br.readLine()) != null) {
 				String[] contents = line.split("\\|");
-				if (contents.length != 2) {
+				if (contents.length < 2) {
 					System.out.println("Incorrect line: " + line);
 					continue;
 				}
 				String wavName = contents[0].replaceAll("wavs/", "");
 				String textAndSpeakerId = contents[1];
-				if (speakerId != null) {
+				if (contents.length > 2) {
+					textAndSpeakerId += "|" + contents[contents.length - 1];
+				} else if (speakerId != null) {
 					textAndSpeakerId += "|" + speakerId;
 				}
 				wavFileNames.add(wavName);
