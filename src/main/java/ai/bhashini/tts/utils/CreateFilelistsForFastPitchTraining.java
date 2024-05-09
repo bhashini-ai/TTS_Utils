@@ -19,13 +19,14 @@ public class CreateFilelistsForFastPitchTraining {
 	HashMap<String, String> wavTextMapping = new HashMap<String, String>();
 
 	public static class Arguments extends CommandLineOptions {
-		StringOption audioTextFile = new StringOption("filelist", "audio-text-file", "Path of audio-text file");
+		StringOption audioTextFileList = new StringOption("filelist", "audio-text-filelist",
+				"Path of audio-text filelist");
 		StringOption recordingsDir = new StringOption("dir", "recordings-dir",
 				"Path of directory containing date-wise audio recordings");
 
 		public Arguments() {
 			super();
-			options.addOption(audioTextFile);
+			options.addOption(audioTextFileList);
 			options.addOption(recordingsDir);
 		}
 	}
@@ -40,24 +41,24 @@ public class CreateFilelistsForFastPitchTraining {
 			arguments.printHelp(CreateFilelistsForFastPitchTraining.class.getCanonicalName());
 			return;
 		}
-		String audioTextFilePath = arguments.audioTextFile.getStringValue();
+		String audioTextFileListPath = arguments.audioTextFileList.getStringValue();
 		String recordingsDirPath = arguments.recordingsDir.getStringValue();
-		if (audioTextFilePath == null && recordingsDirPath == null) {
+		if (audioTextFileListPath == null && recordingsDirPath == null) {
 			arguments.printHelp(CreateFilelistsForFastPitchTraining.class.getCanonicalName());
-			System.out.println("Specify one of the options: --" + arguments.audioTextFile.getLongOpt() + " or --"
+			System.out.println("Specify one of the options: --" + arguments.audioTextFileList.getLongOpt() + " or --"
 					+ arguments.recordingsDir.getLongOpt());
 			return;
 		}
 
-		if (audioTextFilePath != null) {
-			File audioTextFile = new File(audioTextFilePath);
+		if (audioTextFileListPath != null) {
+			File audioTextFile = new File(audioTextFileListPath);
 			if (!audioTextFile.exists()) {
-				System.out.println("Error: " + arguments.audioTextFile + " does not exist." + "\nExiting.");
+				System.out.println("Error: " + arguments.audioTextFileList + " does not exist." + "\nExiting.");
 				return;
 			}
-			System.out.println("Processing " + arguments.audioTextFile);
+			System.out.println("Processing " + arguments.audioTextFileList);
 			CreateFilelistsForFastPitchTraining createFilelistsForTraining = new CreateFilelistsForFastPitchTraining();
-			createFilelistsForTraining.loadAudioTextFile(audioTextFilePath, null);
+			createFilelistsForTraining.loadAudioTextFile(audioTextFileListPath, null);
 			createFilelistsForTraining.createFilelists(new File(audioTextFile.getParentFile(), "filelists"));
 		} else {
 			File recordingsDir = new File(recordingsDirPath);
