@@ -77,11 +77,15 @@ public class CreateSentenceLevelTextFiles {
 			String line;
 			while ((line = br.readLine()) != null) {
 				String[] contents = line.split("\t");
-				if (contents.length < 2) {
+				int numFields = 2;
+				if (scriptFile.getName().matches("CONV.txt")) {
+					numFields = 3;
+				}
+				if (contents.length < numFields) {
 					System.out.println("Skipping line: " + line);
 					continue;
 				}
-				sentences.put(contents[0], contents[1]);
+				sentences.put(contents[0], contents[numFields - 1]);
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
