@@ -13,8 +13,8 @@ public enum Script {
 	English(0x0000),
 	Urdu(0x0600, 0x06ff);
 
-    public final int unicodeBlockStart;
-    public final int unicodeBlockEnd;
+	public final int unicodeBlockStart;
+	public final int unicodeBlockEnd;
 
 	private Script(int unicodeBlockStart) {
 		this(unicodeBlockStart, unicodeBlockStart + 0x7f);
