@@ -34,14 +34,14 @@ public class Transliterate {
 				getClass().getResourceAsStream("/" + transliterationMappingsFile), StandardCharsets.UTF_8))) {
 			// Read header
 			String line = br.readLine();
-			ArrayList<ScriptId> scriptIds = new ArrayList<>();
+			ArrayList<Script> scripts = new ArrayList<>();
 			for (String script : line.split("\t")) {
-				scriptIds.add(ScriptId.valueOf(script));
+				scripts.add(Script.valueOf(script));
 			}
 			// Read mappings
 			while ((line = br.readLine()) != null) {
 				String[] contents = line.split("\t");
-				if (contents.length != scriptIds.size()) {
+				if (contents.length != scripts.size()) {
 					System.err.println(
 							"Error while loading " + transliterationMappingsFile + "\n" + "\tSkipping line: " + line);
 					continue;
@@ -52,9 +52,9 @@ public class Transliterate {
 						if (i == j) {
 							continue;
 						}
-						ScriptId outputScriptId = scriptIds.get(j);
+						Script outputScript = scripts.get(j);
 						String outputText = contents[j];
-						putTransliterationMapping(inputText, outputScriptId, outputText);
+						putTransliterationMapping(inputText, outputScript, outputText);
 					}
 				}
 			}
@@ -65,26 +65,26 @@ public class Transliterate {
 		}
 	}
 
-	protected String getKey(String inputText, ScriptId outputScriptId) {
-		return inputText + ":" + outputScriptId.name();
+	protected String getKey(String inputText, Script outputScript) {
+		return inputText + ":" + outputScript.name();
 	}
 
-	protected String getTransliterationMapping(String inputText, ScriptId outputScriptId) {
-		return transliterationMappings.get(getKey(inputText, outputScriptId));
+	protected String getTransliterationMapping(String inputText, Script outputScript) {
+		return transliterationMappings.get(getKey(inputText, outputScript));
 	}
 
-	protected String putTransliterationMapping(String inputText, ScriptId outputScriptId, String outputText) {
-		return transliterationMappings.put(getKey(inputText, outputScriptId), outputText);
+	protected String putTransliterationMapping(String inputText, Script outputScript, String outputText) {
+		return transliterationMappings.put(getKey(inputText, outputScript), outputText);
 	}
 
-	public String transliterate(String inputText, ScriptId inputScriptId, ScriptId outputScriptId) {
-		int srcUnicodeStart = inputScriptId.unicodeBlockStart;
-		int dstUnicodeStart = outputScriptId.unicodeBlockStart;
+	public String transliterate(String inputText, Script inputScript, Script outputScript) {
+		int srcUnicodeStart = inputScript.unicodeBlockStart;
+		int dstUnicodeStart = outputScript.unicodeBlockStart;
 		String outputText = "";
 		for (char c : inputText.toCharArray()) {
 			String mappedString = c + "";
-			if (inputScriptId.isValidCodepoint(c)) {
-				mappedString = getTransliterationMapping(c + "", outputScriptId);
+			if (inputScript.isValidCodepoint(c)) {
+				mappedString = getTransliterationMapping(c + "", outputScript);
 				if (mappedString == null) {
 					char targetC = (char) ((int) c - srcUnicodeStart + dstUnicodeStart);
 					if (!Character.isDefined(targetC)) {
@@ -98,7 +98,7 @@ public class Transliterate {
 		return outputText;
 	}
 
-	public void transliterate(String inputFilePath, String outputFilePath, ScriptId srcScript, ScriptId dstScript) {
+	public void transliterate(String inputFilePath, String outputFilePath, Script srcScript, Script dstScript) {
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFilePath));
 				BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
 			String line;
@@ -115,9 +115,13 @@ public class Transliterate {
 
 	public static void main(String[] args) {
 		String inputText = "கடல்களுக்கான உரோமானியக்கடவுள் நெப்டியூன் என்பவரின் பெயரே ஞாயிற்றுத் தொகுதியில் உள்ள கோளான நெப்டியூன் கோளிற்கு சூட்டப்பட்டது.";
-		// String inputText = "अभिषिषेणयिषुं भुवनानि यः स्मरमिवाख्यत लोध्ररजश्चयः।\n" + "क्षुभितसैन्यपरागविपाण्डुर- द्युतिरयं तिरयन्नुदभूद्दिशः॥";
-		String outputText = Transliterate.getInstance().transliterate(inputText, ScriptId.Taml, ScriptId.Knda);
+		String outputText = Transliterate.getInstance().transliterate(inputText, Script.Tamil, Script.Kannada);
 		System.out.println(inputText + "\n->\n" + outputText);
-		// Transliterate.getInstance().transliterate(args[0], args[1], ScriptId.Deva, ScriptId.Knda);
+
+		inputText = "अभिषिषेणयिषुं भुवनानि यः स्मरमिवाख्यत लोध्ररजश्चयः।\n" + "क्षुभितसैन्यपरागविपाण्डुर- द्युतिरयं तिरयन्नुदभूद्दिशः॥";
+		outputText = Transliterate.getInstance().transliterate(inputText, Script.Devanagari, Script.Kannada);
+		System.out.println("\n" + inputText + "\n->\n" + outputText);
+
+		// Transliterate.getInstance().transliterate(args[0], args[1], ScriptId.Devanagari, ScriptId.Kannada);
 	}
 }
