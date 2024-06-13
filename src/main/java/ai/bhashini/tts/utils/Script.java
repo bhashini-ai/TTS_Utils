@@ -10,19 +10,23 @@ public enum Script {
 	Telugu(0x0C00),
 	Kannada(0x0C80),
 	Malayalam(0x0D00),
-	English(0x0000),
-	Urdu(0x0600, 0x06ff);
+	English(0x0000, 0x007F, 0x0030, 0x0039),
+	Urdu(0x0600, 0x06FF, 0x06F0, 0x06F9);
 
 	public final int unicodeBlockStart;
 	public final int unicodeBlockEnd;
+	public final int digitZero;
+	public final int digitNine;
 
 	private Script(int unicodeBlockStart) {
-		this(unicodeBlockStart, unicodeBlockStart + 0x7f);
+		this(unicodeBlockStart, unicodeBlockStart + 0x7F, unicodeBlockStart + 0x66, unicodeBlockStart + 0x6F);
 	}
 
-	private Script(int unicodeBlockStart, int unicodeBlockEnd) {
+	private Script(int unicodeBlockStart, int unicodeBlockEnd, int digitZero, int digitNine) {
 		this.unicodeBlockStart = unicodeBlockStart;
 		this.unicodeBlockEnd = unicodeBlockEnd;
+		this.digitZero = digitZero;
+		this.digitNine = digitNine;
 	}
 
 	public boolean isValidCodepoint(int c) {
