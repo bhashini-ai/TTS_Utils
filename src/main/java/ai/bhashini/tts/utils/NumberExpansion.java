@@ -67,6 +67,9 @@ public class NumberExpansion {
 		if (output != null) {
 			return output + SPACE;
 		}
+		if (language == Language.Sanskrit) {
+			return expandSanskritNumber(number);
+		}
 		if (number <= 99) {
 			return expandBasedOnPattern(number, 10, "x", "0", true);
 		}
@@ -94,6 +97,78 @@ public class NumberExpansion {
 			return expandBasedOnPattern(number, 100000, "xxxxx", "00000", false);
 		}
 		return expandBasedOnPattern(number, 10000000, "xxxxxxx", "0000000", false);
+	}
+
+	public String expandSanskritNumber(long number) {
+		String s = expandSanskritTens(number);
+		if (number >= 100) {
+			s += expandSanskritHundreds(number);
+		}
+		if (number >= 1000) {
+			s += expandSanskritThousands(number);
+		}
+		if (number >= 100000) {
+			s += expandSanskritLakhs(number);
+		}
+		if (number >= 10000000) {
+			s += expandSanskritCrores(number);
+		}
+		if (number >= 1000000000) {
+			s += expandSanskritArbhudham(number);
+		}
+		return s;
+	}
+
+	public String expandSanskritTens(long number) {
+		long n = number % 100;
+		if (n > 0) {
+			String pattern = number >= 100 ? "x" + n : "" + n;
+			return numberExpansionProperties.getProperty(pattern) + SPACE;
+		}
+		return "";
+	}
+
+	public String expandSanskritHundreds(long number) {
+		return expandBasedOnPattern2(number, 1000, 100, "xx", "00");
+	}
+
+	public String expandSanskritThousands(long number) {
+		return expandBasedOnPattern2(number, 100000, 1000, "xxx", "000");
+	}
+
+	public String expandSanskritLakhs(long number) {
+		return expandBasedOnPattern2(number, 10000000, 100000, "xxxxx", "00000");
+	}
+
+	public String expandSanskritCrores(long number) {
+		return expandBasedOnPattern2(number, 1000000000, 10000000, "xxxxxxx", "0000000");
+	}
+
+	public String expandSanskritArbhudham(long number) {
+		long n = number / 1000000000;
+		String pattern = "000000000";
+		String s = numberExpansionProperties.getProperty(n + pattern);
+		if (s != null) {
+			return s + SPACE;
+		}
+		String s1 = expandSanskritNumber(n);
+		String s2 = numberExpansionProperties.getProperty("x" + pattern);
+		return s1 + SPACE + s2 + SPACE;
+	}
+
+	public String expandBasedOnPattern2(long number, long t1, long t2, String p1, String p2) {
+		long n = (number % t1) / t2;
+		if (n > 0) {
+			String pattern = number >= t1 ? p1 : p2;
+			String s = numberExpansionProperties.getProperty(n + pattern);
+			if (s != null) {
+				return s + SPACE;
+			}
+			String s1 = numberExpansionProperties.getProperty(n + "");
+			String s2 = numberExpansionProperties.getProperty("x" + pattern);
+			return s1 + s2 + SPACE;
+		}
+		return "";
 	}
 
 	protected int replaceLanguageDigitsWithEnglishDigits(char[] inputChars) {
@@ -288,7 +363,7 @@ public class NumberExpansion {
 	}
 
 	public static void main(String[] args) {
-		NumberExpansion numberExpansion = new NumberExpansion(Language.Hindi);
+		NumberExpansion numberExpansion = new NumberExpansion(Language.Sanskrit);
 		for (int i = 1; i <= 10000; i++) {
 			System.out.println(i + ": " + numberExpansion.expandNumber(i));
 		}
