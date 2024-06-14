@@ -73,6 +73,11 @@ public class NumberExpansion {
 		if (number <= 999) {
 			return expandBasedOnPattern(number, 100, "xx", "00", false);
 		}
+		if (language == Language.Telugu) {
+			if (number >= 1001 && number <= 1999) {
+				return expandBasedOnPattern(number, 100, "xx", "00", false);
+			}
+		}
 		if (number <= 99999) {
 			return expandBasedOnPattern(number, 1000, "xxx", "000", false);
 		}
@@ -274,7 +279,7 @@ public class NumberExpansion {
 	}
 
 	public static void main(String[] args) {
-		NumberExpansion numberExpansion = new NumberExpansion(Language.Kannada);
+		NumberExpansion numberExpansion = new NumberExpansion(Language.Telugu);
 		for (int i = 1; i <= 10000; i++) {
 			System.out.println(i + ": " + numberExpansion.expandNumber(i));
 		}
