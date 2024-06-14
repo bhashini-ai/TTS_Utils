@@ -43,21 +43,18 @@ public class NumberExpansion {
 
 	protected String expandBasedOnPattern(long number, int divisor, String xString, String zerosString,
 			boolean doSandhi) {
-		String output = numberExpansionProperties.getProperty(number + "");
+		long quotient = number / divisor;
+		long remainder = number % divisor;
+		String output = numberExpansionProperties.getProperty(quotient + xString);
 		if (output != null) {
-			return output + SPACE;
+			return sandhi(output, expandNumber(remainder), doSandhi) + SPACE;
 		}
-		output = numberExpansionProperties.getProperty((number / divisor) + xString);
-		if (output != null) {
-			return sandhi(output, expandNumber(number % divisor), doSandhi) + SPACE;
-		}
-		if ((number % divisor) == 0 && (output = numberExpansionProperties.getProperty("x" + zerosString)) != null) {
-			return sandhi(expandNumber(number / divisor), output, true) + SPACE;
+		if (remainder == 0 && (output = numberExpansionProperties.getProperty("x" + zerosString)) != null) {
+			return sandhi(expandNumber(quotient), output, true) + SPACE;
 		}
 		output = numberExpansionProperties.getProperty("x" + xString);
 		if (output != null) {
-			return sandhi(sandhi(expandNumber(number / divisor), output, true), expandNumber(number % divisor),
-					doSandhi) + SPACE;
+			return sandhi(sandhi(expandNumber(quotient), output, true), expandNumber(remainder), doSandhi) + SPACE;
 		}
 		return "";
 	}
@@ -66,8 +63,9 @@ public class NumberExpansion {
 		if (number == 0) {
 			return "";
 		}
-		if (number <= 9) {
-			return numberExpansionProperties.getProperty(number + "") + SPACE;
+		String output = numberExpansionProperties.getProperty(number + "");
+		if (output != null) {
+			return output + SPACE;
 		}
 		if (number <= 99) {
 			return expandBasedOnPattern(number, 10, "x", "0", true);
@@ -250,7 +248,7 @@ public class NumberExpansion {
 	protected String sandhi(String word1, String word2, boolean doSandhi) {
 		word1 = word1.trim();
 		word2 = word2.trim();
-		if (doSandhi) {
+		if (doSandhi && word1.length() > 0 && word2.length() > 0) {
 			int prevChar = word1.codePointAt(word1.length() - 1);
 			int nextChar = word2.codePointAt(0);
 			if (isDependentVowel(prevChar) && isVowel(nextChar)) {
