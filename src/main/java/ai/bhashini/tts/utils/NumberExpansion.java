@@ -73,8 +73,17 @@ public class NumberExpansion {
 		if (number <= 999) {
 			return expandBasedOnPattern(number, 100, "xx", "00", false);
 		}
-		if (language == Language.Telugu) {
+		if (language == Language.Hindi || language == Language.Bengali || language == Language.Telugu) {
 			if (number >= 1001 && number <= 1999) {
+				return expandBasedOnPattern(number, 100, "xx", "00", false);
+			}
+		}
+		if (language == Language.Marathi) {
+			if ((number >= 1100 && number <= 1999) || (number >= 2100 && number <= 2999)
+					|| (number >= 3100 && number <= 3999) || (number >= 4100 && number <= 4999)
+					|| (number >= 5100 && number <= 5999) || (number >= 6100 && number <= 6999)
+					|| (number >= 7100 && number <= 7999) || (number >= 8100 && number <= 8999)
+					|| (number >= 9100 && number <= 9999)) {
 				return expandBasedOnPattern(number, 100, "xx", "00", false);
 			}
 		}
@@ -279,7 +288,7 @@ public class NumberExpansion {
 	}
 
 	public static void main(String[] args) {
-		NumberExpansion numberExpansion = new NumberExpansion(Language.Telugu);
+		NumberExpansion numberExpansion = new NumberExpansion(Language.Hindi);
 		for (int i = 1; i <= 10000; i++) {
 			System.out.println(i + ": " + numberExpansion.expandNumber(i));
 		}
