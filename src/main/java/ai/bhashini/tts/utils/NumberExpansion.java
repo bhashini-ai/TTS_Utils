@@ -12,6 +12,7 @@ public class NumberExpansion {
 	public static final int SYMBOL_COMMA = 0x2C;
 	public static final int SYMBOL_DOT = 0x2E;
 	public static final String SPACE = " ";
+	public static final int DEVANAGARI_VISARGA = 'ः';
 
 	protected Language language;
 	protected Properties numberExpansionProperties = new Properties();
@@ -164,7 +165,10 @@ public class NumberExpansion {
 			if (s != null) {
 				return s + SPACE;
 			}
-			String s1 = numberExpansionProperties.getProperty(n + "");
+			String s1 = numberExpansionProperties.getProperty(n + "").trim();
+			if (s1.charAt(s1.length() - 1) == DEVANAGARI_VISARGA) {
+				s1 = s1.substring(0, s1.length() - 1);
+			}
 			String s2 = numberExpansionProperties.getProperty("x" + pattern);
 			return s1 + s2 + SPACE;
 		}
@@ -364,7 +368,7 @@ public class NumberExpansion {
 
 	public static void main(String[] args) {
 		NumberExpansion numberExpansion = new NumberExpansion(Language.Sanskrit);
-		for (int i = 1; i <= 10000; i++) {
+		for (int i = 1; i <= 1000000; i++) {
 			System.out.println(i + ": " + numberExpansion.expandNumber(i));
 		}
 	}
