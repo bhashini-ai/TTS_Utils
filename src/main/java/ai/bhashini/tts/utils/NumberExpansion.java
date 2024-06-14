@@ -1,10 +1,16 @@
 package ai.bhashini.tts.utils;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Properties;
+
+import org.apache.commons.cli.ParseException;
 
 public class NumberExpansion {
 	public static final int ENGLISH_DIGIT_ZERO = 0x30;
@@ -13,6 +19,9 @@ public class NumberExpansion {
 	public static final int SYMBOL_DOT = 0x2E;
 	public static final String SPACE = " ";
 	public static final int DEVANAGARI_VISARGA = 'ः';
+	public static final Language[] SUPPORTED_LANGUAGES = { Language.Hindi, Language.Bengali, Language.Marathi,
+			Language.Telugu, Language.Tamil, Language.Kannada, Language.Malayalam, Language.Sanskrit,
+			Language.English };
 
 	protected Language language;
 	protected Properties numberExpansionProperties = new Properties();
@@ -366,10 +375,65 @@ public class NumberExpansion {
 		return vowelSign.offset + language.script.unicodeBlockStart;
 	}
 
+	public static class Arguments extends CommandLineOptions {
+		StringOption inputFilePath = new StringOption("in", "input", "Path of input text file.");
+		StringOption language = new StringOption("lang", "language", "Language of the input text file");
+		StringOption outputFilePath = new StringOption("out", "output",
+				"Path of output text file. If this is not specified, the output will be saved in the same directpory as that of the input with '_expanded' added to the filename.");
+		BooleanOption retainNumbersForValidation = new BooleanOption("retain", "retain-numbers",
+				"Retain original numbers for validation. Original numbers and their expansion will be enclosed in curly brackets.");
+
+		public Arguments() {
+			super();
+			inputFilePath.setRequired(true);
+			language.setRequired(true);
+			options.addOption(inputFilePath);
+			options.addOption(language);
+			options.addOption(outputFilePath);
+			options.addOption(retainNumbersForValidation);
+		}
+	}
+
 	public static void main(String[] args) {
-		NumberExpansion numberExpansion = new NumberExpansion(Language.Sanskrit);
-		for (int i = 1; i <= 1000000; i++) {
-			System.out.println(i + ": " + numberExpansion.expandNumber(i));
+		Arguments arguments = new Arguments();
+		try {
+			arguments.parse(args);
+			arguments.printValues();
+		} catch (ParseException e) {
+			e.printStackTrace();
+			arguments.printHelp(NumberExpansion.class.getCanonicalName());
+			return;
+		}
+		String inputFilePath = arguments.inputFilePath.getStringValue();
+		String languageStr = arguments.language.getStringValue();
+		String outputFilePath = arguments.outputFilePath.getStringValue();
+		boolean retainNumbersForValidation = arguments.retainNumbersForValidation.getBoolValue();
+
+		Language language;
+		try {
+			language = Language.valueOf(languageStr);
+		} catch (IllegalArgumentException e) {
+			System.out.println("Unrecognized language name. Supported languages are:");
+			for (Language l : SUPPORTED_LANGUAGES) {
+				System.out.println("\t" + l);
+			}
+			arguments.printHelp(NumberExpansion.class.getCanonicalName());
+			return;
+		}
+		if (outputFilePath == null) {
+			int indx = inputFilePath.lastIndexOf('.');
+			outputFilePath = inputFilePath.substring(0, indx) + "_expanded" + inputFilePath.substring(indx);
+		}
+		NumberExpansion numberExpansion = new NumberExpansion(language);
+		try (BufferedReader br = new BufferedReader(new FileReader(inputFilePath));
+				BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				String newContents = numberExpansion.expandNumbers(line, retainNumbersForValidation);
+				bw.write(newContents + "\n");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
