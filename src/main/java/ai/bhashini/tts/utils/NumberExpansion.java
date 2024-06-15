@@ -32,9 +32,9 @@ public class NumberExpansion {
 		loadNumberExpansionProperties(language + "_NumberExpansion.properties");
 	}
 
-	private HashMap<Language, NumberExpansion> uniqueInstancesMap = new HashMap<>();
+	private static HashMap<Language, NumberExpansion> uniqueInstancesMap = new HashMap<>();
 
-	public NumberExpansion getInstance(Language language) {
+	public static NumberExpansion getInstance(Language language) {
 		if (!uniqueInstancesMap.containsKey(language)) {
 			uniqueInstancesMap.put(language, new NumberExpansion(language));
 		}
@@ -375,13 +375,26 @@ public class NumberExpansion {
 		return vowelSign.offset + language.script.unicodeBlockStart;
 	}
 
+	public String removeNumbersAndCurlyBrackets(String text) {
+		char langZero = (char) language.script.digitZero;
+		char langNine = (char) language.script.digitNine;
+		text = text.replaceAll("\\{[" + langZero + "-" + langNine + ",.\\-]+\\}", "");
+		text = text.replaceAll("\\{[\\d,.\\-]+\\}", "");
+		text = text.replaceAll("\\{", "");
+		text = text.replaceAll("\\}", "");
+		return text;
+	}
+
 	public static class Arguments extends CommandLineOptions {
 		StringOption inputFilePath = new StringOption("in", "input", "Path of input text file.");
 		StringOption language = new StringOption("lang", "language", "Language of the input text file");
 		StringOption outputFilePath = new StringOption("out", "output",
-				"Path of output text file. If this is not specified, the output will be saved in the same directpory as that of the input with '_expanded' added to the filename.");
+				"Path of output text file. If this is not specified, the output will be saved in the same directpory as that of the input with '_expanded' "
+						+ "(or '_cleaned' in case of 'remove-numbers-brackets') added to the filename.");
 		BooleanOption retainNumbersForValidation = new BooleanOption("retain", "retain-numbers",
 				"Retain original numbers for validation. Original numbers and their expansion will be enclosed in curly brackets.");
+		BooleanOption removeNumbersAndCurlyBrackets = new BooleanOption("remove", "remove-numbers-brackets",
+				"Remove the original numbers and the curly brackets around their expansion that was previoulsy inserted using the 'retain-numbers' option.");
 
 		public Arguments() {
 			super();
@@ -391,6 +404,7 @@ public class NumberExpansion {
 			options.addOption(language);
 			options.addOption(outputFilePath);
 			options.addOption(retainNumbersForValidation);
+			options.addOption(removeNumbersAndCurlyBrackets);
 		}
 	}
 
@@ -408,6 +422,7 @@ public class NumberExpansion {
 		String languageStr = arguments.language.getStringValue();
 		String outputFilePath = arguments.outputFilePath.getStringValue();
 		boolean retainNumbersForValidation = arguments.retainNumbersForValidation.getBoolValue();
+		boolean removeNumbersAndCurlyBrackets = arguments.removeNumbersAndCurlyBrackets.getBoolValue();
 
 		Language language;
 		try {
@@ -422,16 +437,23 @@ public class NumberExpansion {
 		}
 		if (outputFilePath == null) {
 			int indx = inputFilePath.lastIndexOf('.');
-			outputFilePath = inputFilePath.substring(0, indx) + "_expanded" + inputFilePath.substring(indx);
+			String suffix = removeNumbersAndCurlyBrackets ? "_cleaned" : "_expanded";
+			outputFilePath = inputFilePath.substring(0, indx) + suffix + inputFilePath.substring(indx);
 		}
-		NumberExpansion numberExpansion = new NumberExpansion(language);
+		NumberExpansion numberExpansion = NumberExpansion.getInstance(language);
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFilePath));
 				BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
 			String line;
 			while ((line = br.readLine()) != null) {
-				String newContents = numberExpansion.expandNumbers(line, retainNumbersForValidation);
-				bw.write(newContents + "\n");
+				String newContent;
+				if (removeNumbersAndCurlyBrackets) {
+					newContent = numberExpansion.removeNumbersAndCurlyBrackets(line);
+				} else {
+					newContent = numberExpansion.expandNumbers(line, retainNumbersForValidation);
+				}
+				bw.write(newContent + "\n");
 			}
+			System.out.println("Output saved to " + outputFilePath);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
