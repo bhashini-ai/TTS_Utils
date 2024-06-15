@@ -402,7 +402,6 @@ public class NumberExpansion {
 
 		public Arguments() {
 			super();
-			inputFilePath.setRequired(true);
 			language.setRequired(true);
 			options.addOption(inputFilePath);
 			options.addOption(language);
@@ -443,16 +442,19 @@ public class NumberExpansion {
 			arguments.printHelp(NumberExpansion.class.getCanonicalName());
 			return;
 		}
-		if (outputFilePath == null) {
-			int indx = inputFilePath.lastIndexOf('.');
-			String suffix = removeNumbersAndCurlyBrackets ? "_cleaned" : "_expanded";
-			outputFilePath = inputFilePath.substring(0, indx) + suffix + inputFilePath.substring(indx);
-		}
 		NumberExpansion numberExpansion = NumberExpansion.getInstance(language);
 		if (printtEndNumber > printtStartNumber) {
 			for (int n = printtStartNumber; n <= printtEndNumber; n++) {
 				System.out.println(n + ": " + numberExpansion.expandNumber(n));
 			}
+		}
+		if (inputFilePath == null) {
+			return;
+		}
+		if (outputFilePath == null) {
+			int indx = inputFilePath.lastIndexOf('.');
+			String suffix = removeNumbersAndCurlyBrackets ? "_cleaned" : "_expanded";
+			outputFilePath = inputFilePath.substring(0, indx) + suffix + inputFilePath.substring(indx);
 		}
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFilePath));
 				BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
