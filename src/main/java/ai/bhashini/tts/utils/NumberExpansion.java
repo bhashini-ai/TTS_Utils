@@ -395,6 +395,10 @@ public class NumberExpansion {
 				"Retain original numbers for validation. Original numbers and their expansion will be enclosed in curly brackets.");
 		BooleanOption removeNumbersAndCurlyBrackets = new BooleanOption("remove", "remove-numbers-brackets",
 				"Remove the original numbers and the curly brackets around their expansion that was previoulsy inserted using the 'retain-numbers' option.");
+		IntegerOption printStartNumber = new IntegerOption("from", "show-number-expansion-from", 0,
+				"Prints number expansion from this number");
+		IntegerOption printEndNumber = new IntegerOption("to", "show-number-expansion-to", 0,
+				"Prints number expansion upto this number");
 
 		public Arguments() {
 			super();
@@ -405,6 +409,8 @@ public class NumberExpansion {
 			options.addOption(outputFilePath);
 			options.addOption(retainNumbersForValidation);
 			options.addOption(removeNumbersAndCurlyBrackets);
+			options.addOption(printStartNumber);
+			options.addOption(printEndNumber);
 		}
 	}
 
@@ -423,6 +429,8 @@ public class NumberExpansion {
 		String outputFilePath = arguments.outputFilePath.getStringValue();
 		boolean retainNumbersForValidation = arguments.retainNumbersForValidation.getBoolValue();
 		boolean removeNumbersAndCurlyBrackets = arguments.removeNumbersAndCurlyBrackets.getBoolValue();
+		int printtStartNumber = arguments.printStartNumber.getIntValue();
+		int printtEndNumber = arguments.printEndNumber.getIntValue();
 
 		Language language;
 		try {
@@ -441,6 +449,11 @@ public class NumberExpansion {
 			outputFilePath = inputFilePath.substring(0, indx) + suffix + inputFilePath.substring(indx);
 		}
 		NumberExpansion numberExpansion = NumberExpansion.getInstance(language);
+		if (printtEndNumber > printtStartNumber) {
+			for (int n = printtStartNumber; n <= printtEndNumber; n++) {
+				System.out.println(n + ": " + numberExpansion.expandNumber(n));
+			}
+		}
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFilePath));
 				BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
 			String line;
