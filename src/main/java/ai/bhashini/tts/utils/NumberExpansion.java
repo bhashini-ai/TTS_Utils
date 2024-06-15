@@ -92,11 +92,7 @@ public class NumberExpansion {
 			}
 		}
 		if (language == Language.Marathi) {
-			if ((number >= 1100 && number <= 1999) || (number >= 2100 && number <= 2999)
-					|| (number >= 3100 && number <= 3999) || (number >= 4100 && number <= 4999)
-					|| (number >= 5100 && number <= 5999) || (number >= 6100 && number <= 6999)
-					|| (number >= 7100 && number <= 7999) || (number >= 8100 && number <= 8999)
-					|| (number >= 9100 && number <= 9999)) {
+			if (thousandsExpandableAsHundreds(number)) {
 				return expandBasedOnPattern(number, 100, "xx", "00", false);
 			}
 		}
@@ -109,12 +105,21 @@ public class NumberExpansion {
 		return expandBasedOnPattern(number, 10000000, "xxxxxxx", "0000000", false);
 	}
 
+	public boolean thousandsExpandableAsHundreds(long number) {
+		return (number >= 1100 && number <= 1999) || (number >= 2100 && number <= 2999)
+				|| (number >= 3100 && number <= 3999) || (number >= 4100 && number <= 4999)
+				|| (number >= 5100 && number <= 5999) || (number >= 6100 && number <= 6999)
+				|| (number >= 7100 && number <= 7999) || (number >= 8100 && number <= 8999)
+				|| (number >= 9100 && number <= 9999);
+	}
+
 	public String expandSanskritNumber(long number) {
 		String s = expandSanskritTens(number);
 		if (number >= 100) {
-			s += expandSanskritHundreds(number);
+			int t1 = thousandsExpandableAsHundreds(number) ? 10000 : 1000;
+			s += expandSanskritHundreds(number, t1);
 		}
-		if (number >= 1000) {
+		if (number >= 1000 && !thousandsExpandableAsHundreds(number)) {
 			s += expandSanskritThousands(number);
 		}
 		if (number >= 100000) {
@@ -138,8 +143,8 @@ public class NumberExpansion {
 		return "";
 	}
 
-	public String expandSanskritHundreds(long number) {
-		return expandBasedOnPattern2(number, 1000, 100, "xx", "00");
+	public String expandSanskritHundreds(long number, long t1) {
+		return expandBasedOnPattern2(number, t1, 100, "xx", "00");
 	}
 
 	public String expandSanskritThousands(long number) {
