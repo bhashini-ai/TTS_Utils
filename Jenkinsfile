@@ -13,7 +13,7 @@ pipeline {
         TTS_UTILS_DEPLOY_DIR = credentials('TTS_UTILS_DEPLOY_DIR')
       }
       steps {
-        sh 'scp target/TTS_UTILS-1.0-SNAPSHOT.jar $TTS_UTILS_DEPLOY_SERVER:$TTS_UTILS_DEPLOY_DIR'
+        sh 'scp target/TTS_UTILS-1.0.jar $TTS_UTILS_DEPLOY_SERVER:$TTS_UTILS_DEPLOY_DIR'
       }
     }
 
