@@ -344,11 +344,6 @@ public class CheckCharacters {
 			checkCharacters.createUniqueCharactersFile(concatenatedTranscriptsFile, uniqueCharactersFile);
 			System.out.println("Saved unique characters and their count to " + uniqueCharactersFile.getAbsolutePath());
 		}
-		if (!replacementsTSVFile.exists()) {
-			System.out.println("Error: Could not find the TSV file containing replacements "
-					+ replacementsTSVFile.getAbsolutePath());
-			return;
-		}
 		if (validCharactersFile.exists()) {
 			System.out.println("Loading list of valid characters from " + validCharactersFile.getAbsolutePath());
 			checkCharacters.loadValidCharacters(validCharactersFile);
@@ -359,6 +354,11 @@ public class CheckCharacters {
 			System.out.println("Saved transcripts with English letters to " + transcriptsWithEnglishLettersFile.getAbsolutePath());
 			System.out.println("Saved transcripts containing other invalid characters to "
 					+ transcriptsWithInvalidCharactersFile.getAbsolutePath());
+		}
+		if (!replacementsTSVFile.exists()) {
+			System.out.println("Error: Could not find the TSV file containing replacements "
+					+ replacementsTSVFile.getAbsolutePath());
+			return;
 		}
 		checkCharacters.loadReplacements(replacementsTSVFile);
 		if (inplaceReplacements) {
