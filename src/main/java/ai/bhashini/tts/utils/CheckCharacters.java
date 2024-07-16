@@ -3,7 +3,6 @@ package ai.bhashini.tts.utils;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
@@ -12,17 +11,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import org.apache.commons.cli.ParseException;
 
 public class CheckCharacters {
 	ArrayList<String> txtFilePaths = new ArrayList<>();
 	HashMap<String, String> replacements = new HashMap<>();
+	HashSet<Character> validCharacters = new HashSet<>();
+	boolean verbose = false;
 
-	public CheckCharacters() {
+	public CheckCharacters(boolean verbose) {
+		this.verbose = verbose;
 	}
 
-	void loadTextFilePaths(File dataDir, boolean verbose) {
+	void loadTextFilePaths(File dataDir) {
+		txtFilePaths.clear();
 		File[] subDirs = MatchWavAndTextFiles.getSubDirs(dataDir);
 		for (File subDir : subDirs) {
 			File wavDir = new File(subDir, "wav");
@@ -59,7 +63,7 @@ public class CheckCharacters {
 		}
 	}
 
-	void concatenateTxtFiles(File outputFile, boolean verbose) {
+	void concatenateTxtFiles(File outputFile) {
 		outputFile.getParentFile().mkdirs();
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile))) {
 			for (int i = 0; i < txtFilePaths.size(); i++) {
@@ -92,8 +96,6 @@ public class CheckCharacters {
 					symbolsCount.put(symbol, priorCount + 1);
 				}
 			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -113,7 +115,8 @@ public class CheckCharacters {
 		}
 	}
 
-	HashMap<String, String> loadReplacements(File replacementsTSVFile) {
+	void loadReplacements(File replacementsTSVFile) {
+		replacements.clear();
 		try (BufferedReader br = new BufferedReader(new FileReader(replacementsTSVFile))) {
 			String line;
 			while ((line = br.readLine()) != null) {
@@ -123,12 +126,56 @@ public class CheckCharacters {
 				}
 				replacements.put(contents[0], contents[1]);
 			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return replacements;
+	}
+
+	void loadValidCharacters(File validCharactersFile) {
+		validCharacters.clear();
+		validCharacters.add(' '); // space
+		try (BufferedReader br = new BufferedReader(new FileReader(validCharactersFile))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				validCharacters.add(line.trim().charAt(0));
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	void saveTranscriptsWithInvalidCharacters(Language language, File concatenatedTranscriptsFile,
+			File transcriptsWithNumbersFile, File transcriptsWithEnglishLettersFile,
+			File transcriptsWithInvalidCharactersFile) {
+		int zero = language.script.digitZero;
+		int nine = language.script.digitNine;
+		try (BufferedReader br = new BufferedReader(new FileReader(concatenatedTranscriptsFile));
+				BufferedWriter bwNumbers = new BufferedWriter(new FileWriter(transcriptsWithNumbersFile));
+				BufferedWriter bwEnglishLetters = new BufferedWriter(new FileWriter(transcriptsWithEnglishLettersFile));
+				BufferedWriter bwInvalidCharacters = new BufferedWriter(new FileWriter(transcriptsWithInvalidCharactersFile))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				String[] contents = line.split("\t");
+				String transcript = contents[1];
+				for (int i = 0; i < transcript.length(); i++) {
+					char c = transcript.charAt(0);
+					if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+						bwEnglishLetters.write(line + "\n");
+						break;
+					}
+					if ((c >= '0' && c <= '9') || (c >= zero && c <= nine)) {
+						bwNumbers.write(line + "\n");
+						break;
+					}
+					if (!validCharacters.contains(c)) {
+						bwInvalidCharacters.write(line + "\n");
+						break;
+					}
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	String replaceText(String txt) {
@@ -142,7 +189,7 @@ public class CheckCharacters {
 		return newTxt;
 	}
 
-	void replaceAll(boolean verbose) {
+	void replaceAll() {
 		for (String txtFilePath : txtFilePaths) {
 			String txt = FileUtils.getFileContents(txtFilePath).replaceAll("\n", " ").trim();
 			String newTxt = replaceText(txt);
@@ -176,9 +223,14 @@ public class CheckCharacters {
 		String defaultUniqueCharactersFilePath = "filelists/uniqueCharacters.txt";
 		String defaultReplacementsTSVFilePath = "filelists/replacements.tsv";
 		String defaultPrunedTranscriptsFilePath = "filelists/prunedTranscripts.txt";
+		String defaultValidCharactersFilePath = "filelists/validCharacters.txt";
+		String defaultTranscriptsWithNumbersFilePath = "script/withNumbers.txt";
+		String defaultTranscriptsWithEnglishLettersFilePath = "script/withEnglishLetters.txt";
+		String defaultTranscriptsWithInvalidCharactersFilePath = "script/withInvalidCharacters.txt";
 
 		StringOption dataDir = new StringOption("dir", "data-dir",
 				"Directory containing recordings (<child-dir>/wav/*.wav) and their transcripts (<child-dir>/txt/*.txt)");
+		StringOption language = new StringOption("lang", "language", "Language of the input text file");
 		StringOption concatenatedTranscriptsFilePath = new StringOption("ctfp", "concatenated-transcripts-filepath",
 				"Relative path of text file containing concatenated transcripts " + "(default = '"
 						+ defaultConcatenatedTranscriptsFilePath + "')",
@@ -195,6 +247,24 @@ public class CheckCharacters {
 				"Relative path of file to which pruned transcripts (i.e. after replacements) have to be saved "
 						+ "(default = '" + defaultPrunedTranscriptsFilePath + "')",
 				defaultPrunedTranscriptsFilePath);
+		StringOption validCharactersFilePath = new StringOption("vcfp", "valid-characters-filepath",
+				"Relative path of text file containing valid characters" + "(default = '"
+						+ defaultValidCharactersFilePath + "')",
+				defaultValidCharactersFilePath);
+		StringOption transcriptsWithNumbersFilePath = new StringOption("twnfp", "transcripts-with-numbers-filepath",
+				"Relative path of text file to which transcripts with numbers have to be saved" + "(default = '"
+						+ defaultTranscriptsWithNumbersFilePath + "')",
+				defaultTranscriptsWithNumbersFilePath);
+		StringOption transcriptsWithEnglishLettersFilePath = new StringOption("twelfp",
+				"transcripts-with-english-letters-filepath",
+				"Relative path of text file to which transcripts with English letters have to be saved" + "(default = '"
+						+ defaultTranscriptsWithEnglishLettersFilePath + "')",
+				defaultTranscriptsWithEnglishLettersFilePath);
+		StringOption transcriptsWithInvalidCharactersFilePath = new StringOption("twicfp",
+				"transcripts-with-invalid-characters-filepath",
+				"Relative path of text file to which transcripts with invalid characters have to be saved"
+						+ "(default = '" + defaultTranscriptsWithInvalidCharactersFilePath + "')",
+				defaultTranscriptsWithInvalidCharactersFilePath);
 		BooleanOption concatenateAgain = new BooleanOption("recreate", "concatenate-again",
 				"Force recreation of concatenated-text and unique-characters files");
 		BooleanOption inplaceReplacements = new BooleanOption("inplace", "inplace-replacements",
@@ -204,10 +274,16 @@ public class CheckCharacters {
 		public Arguments() {
 			super();
 			dataDir.setRequired(true);
+			language.setRequired(true);
 			options.addOption(dataDir);
+			options.addOption(language);
 			options.addOption(concatenatedTranscriptsFilePath);
 			options.addOption(uniqueCharactersFilePath);
 			options.addOption(replacementsTSVFilePath);
+			options.addOption(validCharactersFilePath);
+			options.addOption(transcriptsWithNumbersFilePath);
+			options.addOption(transcriptsWithEnglishLettersFilePath);
+			options.addOption(transcriptsWithInvalidCharactersFilePath);
 			options.addOption(concatenateAgain);
 			options.addOption(inplaceReplacements);
 			options.addOption(verbose);
@@ -225,31 +301,47 @@ public class CheckCharacters {
 			return;
 		}
 		String dataDirPath = arguments.dataDir.getStringValue();
+		String languageStr = arguments.language.getStringValue();
 		String concatenatedTranscriptsFilePath = arguments.concatenatedTranscriptsFilePath.getStringValue();
 		String uniqueCharactersFilePath = arguments.uniqueCharactersFilePath.getStringValue();
 		String replacementsTSVFilePath = arguments.replacementsTSVFilePath.getStringValue();
 		String prunedTranscriptsFilePath = arguments.prunedTranscriptsFilePath.getStringValue();
+		String validCharactersFilePath = arguments.validCharactersFilePath.getStringValue();
+		String transcriptsWithNumbersFilePath = arguments.transcriptsWithNumbersFilePath.getStringValue();
+		String transcriptsWithEnglishLettersFilePath = arguments.transcriptsWithEnglishLettersFilePath.getStringValue();
+		String transcriptsWithInvalidCharactersFilePath = arguments.transcriptsWithInvalidCharactersFilePath.getStringValue();
 		boolean concatenateAgain = arguments.concatenateAgain.getBoolValue();
 		boolean inplaceReplacements = arguments.inplaceReplacements.getBoolValue();
 		boolean verbose = arguments.verbose.getBoolValue();
 
 		File dataDir = new File(dataDirPath);
-		File concatenatedTxtFile = new File(dataDir, concatenatedTranscriptsFilePath);
+		Language language;
+		try {
+			language = Language.valueOf(languageStr);
+		} catch (IllegalArgumentException e) {
+			System.out.println("Unrecognized language name.");
+			return;
+		}
+		File concatenatedTranscriptsFile = new File(dataDir, concatenatedTranscriptsFilePath);
 		File uniqueCharactersFile = new File(dataDir, uniqueCharactersFilePath);
 		File replacementsTSVFile = new File(dataDir, replacementsTSVFilePath);
 		File prunedTranscriptsFile = new File(dataDir, prunedTranscriptsFilePath);
+		File validCharactersFile = new File(dataDir, validCharactersFilePath);
+		File transcriptsWithNumbersFile = new File(dataDir, transcriptsWithNumbersFilePath);
+		File transcriptsWithEnglishLettersFile = new File(dataDir, transcriptsWithEnglishLettersFilePath);
+		File transcriptsWithInvalidCharactersFile = new File(dataDir, transcriptsWithInvalidCharactersFilePath);
 
-		CheckCharacters checkCharacters = new CheckCharacters();
-		if (!concatenatedTxtFile.exists() || concatenateAgain) {
+		CheckCharacters checkCharacters = new CheckCharacters(verbose);
+		if (!concatenatedTranscriptsFile.exists() || concatenateAgain) {
 			System.out.println("Checking .txt files in " + dataDir.getAbsolutePath());
-			checkCharacters.loadTextFilePaths(dataDir, verbose);
-			System.out.println("Concatenating all the .txt files to " + concatenatedTxtFile.getAbsolutePath());
-			checkCharacters.concatenateTxtFiles(concatenatedTxtFile, verbose);
+			checkCharacters.loadTextFilePaths(dataDir);
+			System.out.println("Concatenating all the .txt files to " + concatenatedTranscriptsFile.getAbsolutePath());
+			checkCharacters.concatenateTxtFiles(concatenatedTranscriptsFile);
 			System.out.println("Successfully completed concatenation.");
 		}
 		if (!uniqueCharactersFile.exists() || concatenateAgain) {
-			System.out.println("Finding unique characters and their unigram count from " + concatenatedTxtFile.getAbsolutePath());
-			checkCharacters.createUniqueCharactersFile(concatenatedTxtFile, uniqueCharactersFile);
+			System.out.println("Finding unique characters and their unigram count from " + concatenatedTranscriptsFile.getAbsolutePath());
+			checkCharacters.createUniqueCharactersFile(concatenatedTranscriptsFile, uniqueCharactersFile);
 			System.out.println("Saved unique characters and their count to " + uniqueCharactersFile.getAbsolutePath());
 		}
 		if (!replacementsTSVFile.exists()) {
@@ -257,12 +349,23 @@ public class CheckCharacters {
 					+ replacementsTSVFile.getAbsolutePath());
 			return;
 		}
+		if (validCharactersFile.exists()) {
+			System.out.println("Loading list of valid characters from " + validCharactersFile.getAbsolutePath());
+			checkCharacters.loadValidCharacters(validCharactersFile);
+			checkCharacters.saveTranscriptsWithInvalidCharacters(language, concatenatedTranscriptsFile,
+					transcriptsWithNumbersFile, transcriptsWithEnglishLettersFile,
+					transcriptsWithInvalidCharactersFile);
+			System.out.println("Saved transcripts with numbers to " + transcriptsWithNumbersFile.getAbsolutePath());
+			System.out.println("Saved transcripts with English letters to " + transcriptsWithEnglishLettersFile.getAbsolutePath());
+			System.out.println("Saved transcripts containing other invalid characters to "
+					+ transcriptsWithInvalidCharactersFile.getAbsolutePath());
+		}
 		checkCharacters.loadReplacements(replacementsTSVFile);
 		if (inplaceReplacements) {
-			checkCharacters.replaceAll(verbose);
+			checkCharacters.replaceAll();
 		} else {
-			System.out.println("Replacing specified characters in " + concatenatedTxtFile.getAbsolutePath());
-			checkCharacters.replace(concatenatedTxtFile, prunedTranscriptsFile);
+			System.out.println("Replacing specified characters in " + concatenatedTranscriptsFile.getAbsolutePath());
+			checkCharacters.replace(concatenatedTranscriptsFile, prunedTranscriptsFile);
 			System.out.println("Saved pruned transcripts (after replacements) to " + prunedTranscriptsFile.getAbsolutePath());
 		}
 	}
