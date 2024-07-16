@@ -157,25 +157,47 @@ public class CheckCharacters {
 			while ((line = br.readLine()) != null) {
 				String[] contents = line.split("\t");
 				String transcript = contents[1];
-				for (int i = 0; i < transcript.length(); i++) {
-					char c = transcript.charAt(0);
-					if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
-						bwEnglishLetters.write(line + "\n");
-						break;
-					}
-					if ((c >= '0' && c <= '9') || (c >= zero && c <= nine)) {
-						bwNumbers.write(line + "\n");
-						break;
-					}
-					if (!validCharacters.contains(c)) {
-						bwInvalidCharacters.write(line + "\n");
-						break;
-					}
+				if (hasEnglishLetters(transcript)) {
+					bwEnglishLetters.write(line + "\n");
+				} else if (hasNumbers(transcript, zero, nine)) {
+					bwNumbers.write(line + "\n");
+				} else if (hasInvalidCharacters(transcript, validCharacters)) {
+					bwInvalidCharacters.write(line + "\n");
 				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static boolean hasEnglishLetters(String transcript) {
+		for (int i = 0; i < transcript.length(); i++) {
+			char c = transcript.charAt(i);
+			if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean hasNumbers(String transcript, int zero, int nine) {
+		for (int i = 0; i < transcript.length(); i++) {
+			char c = transcript.charAt(i);
+			if ((c >= '0' && c <= '9') || (c >= zero && c <= nine)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean hasInvalidCharacters(String transcript, HashSet<Character> validCharacters) {
+		for (int i = 0; i < transcript.length(); i++) {
+			char c = transcript.charAt(i);
+			if (!validCharacters.contains(c)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	String replaceText(String txt) {
