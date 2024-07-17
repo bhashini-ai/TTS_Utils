@@ -28,11 +28,11 @@ public class NumberExpansion {
 	protected Language language;
 	protected Properties numberExpansionProperties = new Properties();
 
-	private static final String NUMBERS_REGEX = "[-\\d]?[\\d,.-]*\\d+";
-	private static final String COMMA_REGEX1 = "\\d?\\d,\\d\\d\\d";
-	private static final String COMMA_REGEX2 = "\\d?\\d,\\d\\d,\\d\\d\\d";
-	private static final String COMMA_REGEX3 = "\\d?\\d,\\d\\d,\\d\\d,\\d\\d\\d";
-	private static final String COMMA_REGEX4 = "\\d+\\d,\\d\\d,\\d\\d,\\d\\d\\d";
+	protected static final String NUMBERS_REGEX = "[-\\d]?[\\d,.-]*\\d+";
+	protected static final String COMMA_REGEX1 = "\\d?\\d,\\d\\d\\d";
+	protected static final String COMMA_REGEX2 = "\\d?\\d,\\d\\d,\\d\\d\\d";
+	protected static final String COMMA_REGEX3 = "\\d?\\d,\\d\\d,\\d\\d,\\d\\d\\d";
+	protected static final String COMMA_REGEX4 = "\\d+\\d,\\d\\d,\\d\\d,\\d\\d\\d";
 	protected Pattern numbersPattern;
 	protected Pattern commaPattern1;
 	protected Pattern commaPattern2;
@@ -231,8 +231,8 @@ public class NumberExpansion {
 			String numberStr = replacedInput.substring(matcher.start(), matcher.end());
 			String expandedStr = expandByHandlingDashes(numberStr);
 			if (matcher.end() < input.length()) {
-				String restOfSentence = input.substring(matcher.end());
-				expandedStr = handleSandhiWithNextWord(expandedStr, restOfSentence);
+				String restOfInput = input.substring(matcher.end());
+				expandedStr = handleSandhiWithNextWord(expandedStr, restOfInput);
 			}
 			if (retainNumbersForValidation) {
 				String numberStrOrig = input.substring(matcher.start(), matcher.end());
@@ -348,13 +348,13 @@ public class NumberExpansion {
 		return (char) (scriptDigit - getLanguageDigitZero() + ENGLISH_DIGIT_ZERO);
 	}
 
-	protected String handleSandhiWithNextWord(String expandedStr, String restOfSentence) {
+	protected String handleSandhiWithNextWord(String expandedStr, String restOfInput) {
 		for (int i = 1;; i++) {
 			String suffix = numberExpansionProperties.getProperty("s" + i);
 			String prefix = numberExpansionProperties.getProperty("p" + i);
 			String replace = numberExpansionProperties.getProperty("r" + i);
 			if (suffix != null && prefix != null && replace != null) {
-				if (expandedStr.endsWith(suffix) && restOfSentence.trim().startsWith(prefix)) {
+				if (expandedStr.endsWith(suffix) && restOfInput.trim().startsWith(prefix)) {
 					if (replace.equalsIgnoreCase("delete") || replace.equalsIgnoreCase("remove")) {
 						replace = "";
 					}
