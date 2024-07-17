@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.ParseException;
 
@@ -26,9 +28,25 @@ public class NumberExpansion {
 	protected Language language;
 	protected Properties numberExpansionProperties = new Properties();
 
+	private static final String NUMBERS_REGEX = "[-\\d]?[\\d,.-]*\\d+";
+	private static final String COMMA_REGEX1 = "\\d?\\d,\\d\\d\\d";
+	private static final String COMMA_REGEX2 = "\\d?\\d,\\d\\d,\\d\\d\\d";
+	private static final String COMMA_REGEX3 = "\\d?\\d,\\d\\d,\\d\\d,\\d\\d\\d";
+	private static final String COMMA_REGEX4 = "\\d+\\d,\\d\\d,\\d\\d,\\d\\d\\d";
+	protected Pattern numbersPattern;
+	protected Pattern commaPattern1;
+	protected Pattern commaPattern2;
+	protected Pattern commaPattern3;
+	protected Pattern commaPattern4;
+
 	// Singleton class => private constructor
 	private NumberExpansion(Language language) {
 		this.language = language;
+		this.numbersPattern = Pattern.compile(NUMBERS_REGEX);
+		this.commaPattern1 = Pattern.compile(COMMA_REGEX1);
+		this.commaPattern2 = Pattern.compile(COMMA_REGEX2);
+		this.commaPattern3 = Pattern.compile(COMMA_REGEX3);
+		this.commaPattern4 = Pattern.compile(COMMA_REGEX4);
 		loadNumberExpansionProperties(language + "_NumberExpansion.properties");
 	}
 
@@ -189,136 +207,110 @@ public class NumberExpansion {
 		return "";
 	}
 
-	protected int replaceLanguageDigitsWithEnglishDigits(char[] inputChars) {
-		int numbersStartIndex = -1;
-		for (int i = 0; i < inputChars.length; i++) {
-			int currentCharacter = inputChars[i];
-			if (currentCharacter >= ENGLISH_DIGIT_ZERO && currentCharacter <= ENGLISH_DIGIT_NINE) {
-				if (numbersStartIndex == -1) {
-					numbersStartIndex = i;
-				}
-			} else if (currentCharacter >= getLanguageDigitZero() && currentCharacter <= getLanguageDigitNine()) {
-				if (numbersStartIndex == -1) {
-					numbersStartIndex = i;
-				}
-				inputChars[i] = getEnglishEquivalentOfLanguageDigit(currentCharacter);
+	protected String replaceLanguageDigitsWithEnglishDigits(String text) {
+		char[] chars = text.toCharArray();
+		for (int i = 0; i < chars.length; i++) {
+			int c = chars[i];
+			if (c >= getLanguageDigitZero() && c <= getLanguageDigitNine()) {
+				chars[i] = getEnglishEquivalentOfLanguageDigit(c);
 			}
 		}
-		return numbersStartIndex;
-	}
-
-	public String expandNumbers(String input) {
-		return expandNumbers(input, true, false);
+		return new String(chars);
 	}
 
 	public String expandNumbers(String input, boolean retainNumbersForValidation) {
-		return expandNumbers(input, true, retainNumbersForValidation);
-	}
-
-	public String expandNumbers(String input, boolean readDecimalDigitsIndividually,
-			boolean retainNumbersForValidation) {
-		char[] inputChars = input.toCharArray();
-		int numbersStartIndex = replaceLanguageDigitsWithEnglishDigits(inputChars);
-		if (numbersStartIndex == -1) {
-			return input;
-		}
-		StringBuffer outputBuffer = new StringBuffer();
-		if (numbersStartIndex > 0) {
-			if (input.charAt(numbersStartIndex - 1) == '-' && numbersStartIndex > 1
-					&& (input.charAt(numbersStartIndex - 2) == ' ' || input.charAt(numbersStartIndex - 2) == '\n')) {
-				numbersStartIndex--;
+		String replacedInput = replaceLanguageDigitsWithEnglishDigits(input);
+		Matcher mat = numbersPattern.matcher(replacedInput);
+		int prevMatchEnd = 0;
+		StringBuffer output = new StringBuffer();
+		while (mat.find()) {
+			if (mat.start() > prevMatchEnd) {
+				String nonMatchingSubStr = input.substring(prevMatchEnd, mat.start());
+				output.append(nonMatchingSubStr);
 			}
-			// copy the original non-numeral text into outputBuffer
-			outputBuffer.append(input, 0, numbersStartIndex);
-		}
-		StringBuffer numbersBeforeDecimalPoint = new StringBuffer();
-		int decimalStartIndex = inputChars.length;
-		int numbersEndIndex = inputChars.length;
-		boolean hasComma = false;
-		boolean hasDot = false;
-		boolean isNegative = false;
-		for (int i = numbersStartIndex; i < inputChars.length; i++) {
-			char currentCharacter = inputChars[i];
-			if (currentCharacter == SYMBOL_COMMA && i < inputChars.length - 1 && inputChars[i + 1] >= ENGLISH_DIGIT_ZERO
-					&& inputChars[i + 1] <= ENGLISH_DIGIT_NINE) {
-				// Skip comma as in 80,55,255
-				hasComma = true;
-				continue;
-			}
-			if (currentCharacter == '-') {
-				if (i == numbersStartIndex) {
-					isNegative = true;
-				} else {
-					// currentCharacter is dash and is ignored
-				}
-				continue;
-			}
-			if (currentCharacter == SYMBOL_DOT && i < inputChars.length - 1) {
-				// If a number with decimals are encountered, then
-				// the fractional part must be read out individually.
-				hasDot = true;
-				decimalStartIndex = i + 1;
-				break;
-			}
-			if (currentCharacter < ENGLISH_DIGIT_ZERO || currentCharacter > ENGLISH_DIGIT_NINE) {
-				numbersEndIndex = i;
-				break;
-			}
-			numbersBeforeDecimalPoint.append(currentCharacter);
-		}
-		StringBuffer strBuf = new StringBuffer();
-		if (isNegative) {
-			strBuf.append(numberExpansionProperties.getProperty("-") + SPACE);
-		}
-		int lengthOfNumber = numbersBeforeDecimalPoint.length();
-		if (hasComma || hasDot || isNegative || lengthOfNumber <= 4) {
-			// numbers that contain comma, dot or minus are expanded as well as numbers in
-			// date format
-			strBuf.append(expandNumber(numbersBeforeDecimalPoint.toString()));
-		} else {
-			// all other numbers are read out individually
-			strBuf.append(expandDigitsIndividually(numbersBeforeDecimalPoint.toString()));
-		}
-		if (decimalStartIndex < inputChars.length) {
-			StringBuffer numbersAfterDecimalPoint = new StringBuffer();
-			for (int i = decimalStartIndex; i < inputChars.length; i++) {
-				char currentCharacter = inputChars[i];
-				if (currentCharacter < ENGLISH_DIGIT_ZERO || currentCharacter > ENGLISH_DIGIT_NINE) {
-					numbersEndIndex = i;
-					break;
-				}
-				numbersAfterDecimalPoint.append(currentCharacter);
-			}
-			if (numbersAfterDecimalPoint.length() > 0) {
-				strBuf.append(numberExpansionProperties.getProperty(".") + SPACE);
-				if (readDecimalDigitsIndividually) {
-					strBuf.append(expandDigitsIndividually(numbersAfterDecimalPoint.toString()));
-				} else {
-					strBuf.append(expandNumber(numbersAfterDecimalPoint.toString()));
-				}
+			String numberStr = replacedInput.substring(mat.start(), mat.end());
+			String expandedStr = expandByHandlingDashes(numberStr);
+			if (retainNumbersForValidation) {
+				String numberStrOrig = input.substring(mat.start(), mat.end());
+				output.append("{" + numberStrOrig + "}{" + expandedStr + "}");
 			} else {
-				strBuf.insert(strBuf.length() - 1, ".");
+				output.append(expandedStr);
 			}
+			prevMatchEnd = mat.end();
 		}
-		if (retainNumbersForValidation) {
-			outputBuffer.append("{");
-			outputBuffer.append(input, numbersStartIndex, numbersEndIndex);
-			outputBuffer.append("}{");
-			outputBuffer.append(strBuf.toString().trim());
-			outputBuffer.append("}");
-		} else {
-			outputBuffer.append(strBuf);
+		if (prevMatchEnd < input.length()) {
+			String nonMatchingSubStr = input.substring(prevMatchEnd, input.length());
+			output.append(nonMatchingSubStr);
 		}
-		if (numbersEndIndex < inputChars.length) {
-			// recursive call to expand any numbers further down the input string
-			String remainingOutput = expandNumbers(input.substring(numbersEndIndex), readDecimalDigitsIndividually,
-					retainNumbersForValidation);
-			outputBuffer.append(remainingOutput);
-		}
-		return outputBuffer.toString();
+		return output.toString();
 	}
 
-	private String expandNumber(String numberString) {
+	protected String expandByHandlingDashes(String numberStr) {
+		StringBuffer output = new StringBuffer();
+		if (numberStr.charAt(0) == '-') {
+			output.append(numberExpansionProperties.getProperty("-") + SPACE);
+			numberStr = numberStr.substring(1);
+		}
+		String[] parts = numberStr.split("-");
+		for (String part: parts) {
+			output.append(expandByHandlingDots(part) + SPACE);
+		}
+		return output.toString().trim().replaceAll("\\s+", " ");
+	}
+
+	protected String expandByHandlingDots(String numberStr) {
+		StringBuffer output = new StringBuffer();
+		String[] parts = numberStr.split("\\.");
+		if (parts.length == 2 && !parts[1].contains(",")) {
+			output.append(expandByHandlingCommas(parts[0]) + SPACE);
+			output.append(numberExpansionProperties.getProperty(".") + SPACE);
+			output.append(expandDigitsIndividually(parts[1]) + SPACE);
+		} else {
+			for (String part : parts) {
+				output.append(expandByHandlingCommas(part));
+			}
+		}
+		return output.toString();
+	}
+
+	protected String expandByHandlingCommas(String numberStr) {
+		StringBuffer output = new StringBuffer();
+		if (numberStr.contains(",")) {
+			if (validCommas(numberStr)) {
+				String numberStrWithoutCommas = numberStr.replace(",", "");
+				output.append(expandNumber(numberStrWithoutCommas));
+			} else {
+				String[] parts = numberStr.split(",");
+				for (String part : parts) {
+					output.append(expandNumber(part));
+				}
+			}
+		} else if (numberStr.length() <= 7) {
+			output.append(expandNumber(numberStr) + SPACE);
+		} else {
+			output.append(expandDigitsIndividually(numberStr) + SPACE);
+		}
+		return output.toString();
+	}
+
+	protected boolean validCommas(String numberStr) {
+		int numDigits = numberStr.replace(",", "").length();
+		if (numDigits <= 3) {
+			return false;
+		}
+		if (numDigits <= 5) {
+			return commaPattern1.matcher(numberStr).matches();
+		}
+		if (numDigits <= 7) {
+			return commaPattern2.matcher(numberStr).matches();
+		}
+		if (numDigits <= 9) {
+			return commaPattern3.matcher(numberStr).matches();
+		}
+		return commaPattern4.matcher(numberStr).matches();
+	}
+
+	protected String expandNumber(String numberString) {
 		long numberToExpand = 0;
 		try {
 			numberToExpand = Long.parseLong(numberString);
@@ -332,7 +324,7 @@ public class NumberExpansion {
 		}
 	}
 
-	private String expandDigitsIndividually(String numberString) {
+	protected String expandDigitsIndividually(String numberString) {
 		StringBuffer strBuf = new StringBuffer();
 		for (char c : numberString.toCharArray()) {
 			strBuf.append(numberExpansionProperties.getProperty(c + "") + SPACE);
@@ -478,5 +470,4 @@ public class NumberExpansion {
 			e.printStackTrace();
 		}
 	}
-
 }
