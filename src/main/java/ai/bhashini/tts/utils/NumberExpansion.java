@@ -230,6 +230,10 @@ public class NumberExpansion {
 			}
 			String numberStr = replacedInput.substring(matcher.start(), matcher.end());
 			String expandedStr = expandByHandlingDashes(numberStr);
+			if (matcher.end() < input.length()) {
+				String restOfSentence = input.substring(matcher.end());
+				expandedStr = handleSandhiWithNextWord(expandedStr, restOfSentence);
+			}
 			if (retainNumbersForValidation) {
 				String numberStrOrig = input.substring(matcher.start(), matcher.end());
 				output.append("{" + numberStrOrig + "}{" + expandedStr + "}");
@@ -342,6 +346,26 @@ public class NumberExpansion {
 
 	char getEnglishEquivalentOfLanguageDigit(int scriptDigit) {
 		return (char) (scriptDigit - getLanguageDigitZero() + ENGLISH_DIGIT_ZERO);
+	}
+
+	protected String handleSandhiWithNextWord(String expandedStr, String restOfSentence) {
+		for (int i = 1;; i++) {
+			String suffix = numberExpansionProperties.getProperty("s" + i);
+			String prefix = numberExpansionProperties.getProperty("p" + i);
+			String replace = numberExpansionProperties.getProperty("r" + i);
+			if (suffix != null && prefix != null && replace != null) {
+				if (expandedStr.endsWith(suffix) && restOfSentence.trim().startsWith(prefix)) {
+					if (replace.equalsIgnoreCase("delete") || replace.equalsIgnoreCase("remove")) {
+						replace = "";
+					}
+					expandedStr = expandedStr.substring(0, expandedStr.length() - suffix.length()) + replace;
+					break;
+				}
+			} else {
+				break;
+			}
+		}
+		return expandedStr;
 	}
 
 	protected String sandhi(String word1, String word2, boolean doSandhi) {
