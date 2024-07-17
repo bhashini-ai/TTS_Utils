@@ -59,10 +59,10 @@ public class NumberExpansion {
 		return uniqueInstancesMap.get(language);
 	}
 
-	protected void loadNumberExpansionProperties(String numberExpansionConfigurationXml) {
+	protected void loadNumberExpansionProperties(String numberExpansionPropertiesFile) {
 		// https://stackoverflow.com/a/30755227 and https://stackoverflow.com/a/17852323
 		try {
-			InputStream is = getClass().getResourceAsStream("/" + numberExpansionConfigurationXml);
+			InputStream is = getClass().getResourceAsStream("/" + numberExpansionPropertiesFile);
 			numberExpansionProperties.load(new InputStreamReader(is, "UTF-8"));
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -220,23 +220,23 @@ public class NumberExpansion {
 
 	public String expandNumbers(String input, boolean retainNumbersForValidation) {
 		String replacedInput = replaceLanguageDigitsWithEnglishDigits(input);
-		Matcher mat = numbersPattern.matcher(replacedInput);
+		Matcher matcher = numbersPattern.matcher(replacedInput);
 		int prevMatchEnd = 0;
 		StringBuffer output = new StringBuffer();
-		while (mat.find()) {
-			if (mat.start() > prevMatchEnd) {
-				String nonMatchingSubStr = input.substring(prevMatchEnd, mat.start());
+		while (matcher.find()) {
+			if (matcher.start() > prevMatchEnd) {
+				String nonMatchingSubStr = input.substring(prevMatchEnd, matcher.start());
 				output.append(nonMatchingSubStr);
 			}
-			String numberStr = replacedInput.substring(mat.start(), mat.end());
+			String numberStr = replacedInput.substring(matcher.start(), matcher.end());
 			String expandedStr = expandByHandlingDashes(numberStr);
 			if (retainNumbersForValidation) {
-				String numberStrOrig = input.substring(mat.start(), mat.end());
+				String numberStrOrig = input.substring(matcher.start(), matcher.end());
 				output.append("{" + numberStrOrig + "}{" + expandedStr + "}");
 			} else {
 				output.append(expandedStr);
 			}
-			prevMatchEnd = mat.end();
+			prevMatchEnd = matcher.end();
 		}
 		if (prevMatchEnd < input.length()) {
 			String nonMatchingSubStr = input.substring(prevMatchEnd, input.length());
