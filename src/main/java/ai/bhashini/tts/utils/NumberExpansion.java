@@ -27,6 +27,7 @@ public class NumberExpansion {
 
 	protected Language language;
 	protected Properties numberExpansionProperties = new Properties();
+	protected String anusvara;
 
 	protected static final String NUMBERS_REGEX = "[-\\d]?[\\d,.-]*\\d+";
 	protected static final String COMMA_REGEX1 = "\\d?\\d,\\d\\d\\d";
@@ -48,6 +49,7 @@ public class NumberExpansion {
 		this.commaPattern3 = Pattern.compile(COMMA_REGEX3);
 		this.commaPattern4 = Pattern.compile(COMMA_REGEX4);
 		loadNumberExpansionProperties(language + "_NumberExpansion.properties");
+		anusvara = Character.valueOf((char) (language.script.unicodeBlockStart + 0x02)).toString();
 	}
 
 	private static HashMap<Language, NumberExpansion> uniqueInstancesMap = new HashMap<>();
@@ -229,13 +231,21 @@ public class NumberExpansion {
 				output.append(nonMatchingSubStr);
 			}
 			String numberStr = replacedInput.substring(matcher.start(), matcher.end());
+			String numberStrOrig = input.substring(matcher.start(), matcher.end());
+			if (numberStr.equals("0")) {
+				String inputSoFar = matcher.start() > 0 ? input.substring(0, matcher.start()) : "";
+				if (isAnusvaraMistypedAsZero(inputSoFar, numberStrOrig)) {
+					output.append(anusvara);
+					prevMatchEnd = matcher.end();
+					continue;
+				}
+			}
 			String expandedStr = expandByHandlingDashes(numberStr);
 			if (matcher.end() < input.length()) {
 				String restOfInput = input.substring(matcher.end());
 				expandedStr = handleSandhiWithNextWord(expandedStr, restOfInput);
 			}
 			if (retainNumbersForValidation) {
-				String numberStrOrig = input.substring(matcher.start(), matcher.end());
 				output.append("{" + numberStrOrig + "}{" + expandedStr + "}");
 			} else {
 				output.append(expandedStr);
@@ -346,6 +356,16 @@ public class NumberExpansion {
 
 	char getEnglishEquivalentOfLanguageDigit(int scriptDigit) {
 		return (char) (scriptDigit - getLanguageDigitZero() + ENGLISH_DIGIT_ZERO);
+	}
+
+	protected boolean isAnusvaraMistypedAsZero(String inputSoFar, String numberStrOrig) {
+		if (inputSoFar.length() > 0) {
+			String[] words = inputSoFar.split("\\s+");
+			String wordBeforeZero = replaceLanguageDigitsWithEnglishDigits(words[words.length - 1]);
+			boolean wordBeforeHasDigits = numbersPattern.matcher(wordBeforeZero).find();
+			return !wordBeforeHasDigits;
+		}
+		return false;
 	}
 
 	protected String handleSandhiWithNextWord(String expandedStr, String restOfInput) {
