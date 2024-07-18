@@ -38,7 +38,7 @@ public class CheckCharacters {
 				File[] wavFiles = wavDir.listFiles(new FilenameFilter() {
 					@Override
 					public boolean accept(File dir, String name) {
-						return name.endsWith(".wav");
+						return name.endsWith(".wav") && !name.startsWith("._");
 					}
 				});
 				for (File wavFile : wavFiles) {
@@ -86,6 +86,10 @@ public class CheckCharacters {
 			String line;
 			while ((line = br.readLine()) != null) {
 				String[] contents = line.split("\t");
+				if (contents.length < 2) {
+					System.out.println("Skipping line " + line);
+					continue;
+				}
 				String unicodeText = contents[1];
 				for (int i = 0; i < unicodeText.length(); i++) {
 					char symbol = unicodeText.charAt(i);
