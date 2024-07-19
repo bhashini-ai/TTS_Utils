@@ -369,15 +369,13 @@ public class NumberExpansion {
 	}
 
 	protected String handleSandhiWithNextWord(String expandedStr, String restOfInput) {
+		String nextWord = restOfInput.trim().split("\\s")[0];
 		for (int i = 1;; i++) {
 			String suffix = numberExpansionProperties.getProperty("s" + i);
 			String prefix = numberExpansionProperties.getProperty("p" + i);
 			String replace = numberExpansionProperties.getProperty("r" + i);
 			if (suffix != null && prefix != null && replace != null) {
-				if (expandedStr.endsWith(suffix) && restOfInput.trim().startsWith(prefix)) {
-					if (replace.equalsIgnoreCase("delete") || replace.equalsIgnoreCase("remove")) {
-						replace = "";
-					}
+				if (expandedStr.endsWith(suffix) && nextWord.startsWith(prefix)) {
 					expandedStr = expandedStr.substring(0, expandedStr.length() - suffix.length()) + replace;
 					break;
 				}
