@@ -67,6 +67,7 @@ public class UpdateScriptCsv {
 	}
 
 	private HashMap<String, ScriptFields> sentences = new HashMap<>();
+	private HashMap<String, ScriptFields> relevantSentences = new HashMap<>();
 
 	void loadScriptTsv(String tsvFilePath) {
 		sentences.clear();
@@ -94,10 +95,10 @@ public class UpdateScriptCsv {
 	void saveScriptCsv(String tsvFilePath) {
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(tsvFilePath))) {
 			bw.write(ScriptFields.getHeader() + "\n");
-			ArrayList<String> ids = new ArrayList<>(sentences.keySet());
+			ArrayList<String> ids = new ArrayList<>(relevantSentences.keySet());
 			Collections.sort(ids);
 			for (String id : ids) {
-				ScriptFields scriptFields = sentences.get(id);
+				ScriptFields scriptFields = relevantSentences.get(id);
 				bw.write(scriptFields.toString() + "\n");
 			}
 		} catch (IOException e) {
@@ -127,6 +128,7 @@ public class UpdateScriptCsv {
 				if (!scriptSentence.equals(recordedSentence)) {
 					scriptFields.sentence = recordedSentence;
 				}
+				relevantSentences.put(id, scriptFields);
 			}
 		}
 	}
