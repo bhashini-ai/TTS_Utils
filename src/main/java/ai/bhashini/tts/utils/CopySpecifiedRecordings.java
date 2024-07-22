@@ -26,7 +26,7 @@ public class CopySpecifiedRecordings {
 		try (BufferedReader br = new BufferedReader(new FileReader(sentenceIdsFile))) {
 			String line = br.readLine(); // ignore header
 			while ((line = br.readLine()) != null) {
-				String sentenceId = line.split(",")[0];
+				String sentenceId = line.split("\t")[0];
 				sentenceIds.add(sentenceId);
 			}
 		} catch (IOException e) {
