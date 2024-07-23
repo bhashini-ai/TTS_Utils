@@ -50,6 +50,7 @@ public class UpdateScriptCsv {
 				for (String fieldOfInterest : fieldsOfInterest) {
 					if (headerContents[i].equalsIgnoreCase(fieldOfInterest)) {
 						indices.put(fieldOfInterest, i);
+						break;
 					}
 				}
 			}
@@ -68,11 +69,11 @@ public class UpdateScriptCsv {
 		}
 	}
 
-	private HashMap<String, ScriptFields> sentences = new HashMap<>();
-	private HashMap<String, ScriptFields> relevantSentences = new HashMap<>();
+	private HashMap<String, ScriptFields> sentencesInTSV = new HashMap<>();
+	private HashMap<String, ScriptFields> sentencesInSpecifiedDir = new HashMap<>();
 
-	void loadScriptTsv(File tsvFile) {
-		sentences.clear();
+	void loadSentencesInTsv(File tsvFile) {
+		sentencesInTSV.clear();
 		try (BufferedReader br = new BufferedReader(new FileReader(tsvFile))) {
 			String line = br.readLine();
 			HashMap<String, Integer> fieldIndices = ScriptFields.getFieldIndices(line.split("\t"));
@@ -83,7 +84,7 @@ public class UpdateScriptCsv {
 			while ((line = br.readLine()) != null) {
 				try {
 					ScriptFields scriptFields = new ScriptFields(line.split("\t"), fieldIndices);
-					sentences.put(scriptFields.id, scriptFields);
+					sentencesInTSV.put(scriptFields.id, scriptFields);
 				} catch (Exception e) {
 					System.out.println("Error in line: " + line);
 					e.printStackTrace();
@@ -94,13 +95,13 @@ public class UpdateScriptCsv {
 		}
 	}
 
-	void saveScriptCsv(File csvFile) {
+	void saveUpdatedScript(File csvFile) {
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvFile))) {
 			bw.write(ScriptFields.getHeader() + "\n");
-			ArrayList<String> ids = new ArrayList<>(relevantSentences.keySet());
+			ArrayList<String> ids = new ArrayList<>(sentencesInSpecifiedDir.keySet());
 			Collections.sort(ids);
 			for (String id : ids) {
-				ScriptFields scriptFields = relevantSentences.get(id);
+				ScriptFields scriptFields = sentencesInSpecifiedDir.get(id);
 				bw.write(scriptFields.toString() + "\n");
 			}
 		} catch (IOException e) {
@@ -108,7 +109,8 @@ public class UpdateScriptCsv {
 		}
 	}
 
-	void updateScript(File recordingsDir) {
+	void loadSentencesInSpecifiedDirAndUpdateScript(File recordingsDir) {
+		sentencesInSpecifiedDir.clear();
 		File txtDir = new File(recordingsDir, "txt");
 		if (!txtDir.exists()) {
 			return;
@@ -123,29 +125,29 @@ public class UpdateScriptCsv {
 		Arrays.sort(txtFiles);
 		for (File txtFile : txtFiles) {
 			String id = FileUtils.getFileNameWithoutExtension(txtFile, "txt");
-			ScriptFields scriptFields = sentences.get(id);
-			if (scriptFields != null) {
-				String scriptSentence = scriptFields.sentence;
+			ScriptFields scriptFieldsInTSV = sentencesInTSV.get(id);
+			if (scriptFieldsInTSV != null) {
+				String sentenceInTSV = scriptFieldsInTSV.sentence;
 				String recordedSentence = FileUtils.getFileContents(txtFile.getAbsolutePath()).split("\n")[0];
-				if (!scriptSentence.equals(recordedSentence)) {
-					scriptFields.sentence = recordedSentence;
+				if (!sentenceInTSV.equals(recordedSentence)) {
+					scriptFieldsInTSV.sentence = recordedSentence;
 				}
-				relevantSentences.put(id, scriptFields);
+				sentencesInSpecifiedDir.put(id, scriptFieldsInTSV);
 			}
 		}
 	}
 
 	public static class Arguments extends CommandLineOptions {
-		StringOption dataDir = new StringOption("dir", "data-dir",
-				"Directory containing recordings (<child-dir>/wav/*.wav) and their transcripts (<child-dir>/txt/*.txt)");
+		StringOption recordingsDir = new StringOption("dir", "recordings-dir",
+				"Directory containing recordings (wav/*.wav) and their transcripts (txt/*.txt)");
 		StringOption tsvFilePath = new StringOption("tsv", "tsv-filepath",
-				"Relative path of TSV file containing transcripts of interest.");
+				"Path of TSV file containing transcripts of interest.");
 
 		public Arguments() {
 			super();
-			dataDir.setRequired(true);
+			recordingsDir.setRequired(true);
 			tsvFilePath.setRequired(true);
-			options.addOption(dataDir);
+			options.addOption(recordingsDir);
 			options.addOption(tsvFilePath);
 		}
 	}
@@ -160,24 +162,22 @@ public class UpdateScriptCsv {
 			arguments.printHelp(UpdateScriptCsv.class.getCanonicalName());
 			return;
 		}
-		String dataDirPath = arguments.dataDir.getStringValue();
+		String recordingsDirPath = arguments.recordingsDir.getStringValue();
 		String tsvFilePath = arguments.tsvFilePath.getStringValue();
-
-		File dataDir = new File(dataDirPath);
-		File tsvFile = new File(dataDir, tsvFilePath);
-		File csvFile = new File(dataDir, tsvFilePath.replace(".tsv", ".csv"));
+		File recordingsDir = new File(recordingsDirPath);
+		File tsvFile = new File(tsvFilePath);
+		File csvFile = new File(tsvFilePath.replace(".tsv", ".csv"));
 
 		UpdateScriptCsv updateScriptCsv = new UpdateScriptCsv();
-
 		System.out.println("Loading " + tsvFile.getAbsolutePath() + " ...");
-		updateScriptCsv.loadScriptTsv(tsvFile);
+		updateScriptCsv.loadSentencesInTsv(tsvFile);
 		System.out.println("Loading complete.\n");
 
 		System.out.println("Checking recorded sentences and updating script ...");
-		updateScriptCsv.updateScript(dataDir);
+		updateScriptCsv.loadSentencesInSpecifiedDirAndUpdateScript(recordingsDir);
 		System.out.println("Updating complete.\n");
 
-		updateScriptCsv.saveScriptCsv(csvFile);
+		updateScriptCsv.saveUpdatedScript(csvFile);
 		System.out.println("Created " + csvFile.getAbsolutePath());
 	}
 
