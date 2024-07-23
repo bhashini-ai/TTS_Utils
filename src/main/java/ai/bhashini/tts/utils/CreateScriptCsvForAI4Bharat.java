@@ -15,6 +15,10 @@ import java.util.HashMap;
 import org.apache.commons.cli.ParseException;
 
 public class CreateScriptCsvForAI4Bharat {
+	public enum FieldOfInterest {
+		ID, Sentence, Language, Speaker, Style, Category
+	}
+
 	static class ScriptFields {
 		String id;
 		String sentence;
@@ -23,19 +27,18 @@ public class CreateScriptCsvForAI4Bharat {
 		String style;
 		String category;
 
-		private static String[] fieldsOfInterest = new String[] { "ID", "Sentence", "language", "speaker", "style", "category" };
-
 		public static String getHeader() {
-			return "ID,Sentence,language,speaker,style,category";
+			return FieldOfInterest.ID + "," + FieldOfInterest.Sentence + "," + FieldOfInterest.Language + ","
+					+ FieldOfInterest.Speaker + "," + FieldOfInterest.Style + "," + FieldOfInterest.Category;
 		}
 
-		public ScriptFields(String[] contents, HashMap<String, Integer> fieldIndices) {
-			this.id = contents[fieldIndices.get("ID")];
-			this.sentence = contents[fieldIndices.get("Sentence")];
-			this.language = contents[fieldIndices.get("language")];
-			this.speaker = contents[fieldIndices.get("speaker")];
-			this.style = contents[fieldIndices.get("style")];
-			this.category = contents[fieldIndices.get("category")];
+		public ScriptFields(String[] contents, HashMap<FieldOfInterest, Integer> fieldIndices) {
+			this.id = contents[fieldIndices.get(FieldOfInterest.ID)];
+			this.sentence = contents[fieldIndices.get(FieldOfInterest.Sentence)];
+			this.language = contents[fieldIndices.get(FieldOfInterest.Language)];
+			this.speaker = contents[fieldIndices.get(FieldOfInterest.Speaker)];
+			this.style = contents[fieldIndices.get(FieldOfInterest.Style)];
+			this.category = contents[fieldIndices.get(FieldOfInterest.Category)];
 		}
 
 		@Override
@@ -44,11 +47,11 @@ public class CreateScriptCsvForAI4Bharat {
 			return id + "," + csvCompatibleSentence + "," + language + "," + speaker + "," + style + "," + category;
 		}
 
-		public static HashMap<String, Integer> getFieldIndices(String[] headerContents) {
-			HashMap<String, Integer> indices = new HashMap<>();
+		public static HashMap<FieldOfInterest, Integer> getFieldIndices(String[] headerContents) {
+			HashMap<FieldOfInterest, Integer> indices = new HashMap<>();
 			for (int i = 0; i < headerContents.length; i++) {
-				for (String fieldOfInterest : fieldsOfInterest) {
-					if (headerContents[i].equalsIgnoreCase(fieldOfInterest)) {
+				for (FieldOfInterest fieldOfInterest : FieldOfInterest.values()) {
+					if (headerContents[i].equalsIgnoreCase(fieldOfInterest.toString())) {
 						indices.put(fieldOfInterest, i);
 						break;
 					}
@@ -57,9 +60,9 @@ public class CreateScriptCsvForAI4Bharat {
 			return indices;
 		}
 
-		public static boolean checkFieldIndices(HashMap<String, Integer> indices) {
+		public static boolean checkFieldIndices(HashMap<FieldOfInterest, Integer> indices) {
 			boolean missingFields = false;
-			for (String fieldOfInterest : fieldsOfInterest) {
+			for (FieldOfInterest fieldOfInterest : FieldOfInterest.values()) {
 				if (!indices.containsKey(fieldOfInterest)) {
 					System.out.println("Missing field: " + fieldOfInterest);
 					missingFields = true;
@@ -76,7 +79,7 @@ public class CreateScriptCsvForAI4Bharat {
 		sentencesInTSV.clear();
 		try (BufferedReader br = new BufferedReader(new FileReader(tsvFile))) {
 			String line = br.readLine();
-			HashMap<String, Integer> fieldIndices = ScriptFields.getFieldIndices(line.split("\t"));
+			HashMap<FieldOfInterest, Integer> fieldIndices = ScriptFields.getFieldIndices(line.split("\t"));
 			if (!ScriptFields.checkFieldIndices(fieldIndices)) {
 				System.out.println(tsvFile.getAbsolutePath() + " is missing mandatory fields");
 				return;
@@ -169,7 +172,7 @@ public class CreateScriptCsvForAI4Bharat {
 		File csvFile = new File(tsvFilePath.replace(".tsv", ".csv"));
 
 		CreateScriptCsvForAI4Bharat createScriptCsv = new CreateScriptCsvForAI4Bharat();
-		System.out.println("Loading " + tsvFile.getAbsolutePath() + " ...");
+		System.out.println("\nLoading " + tsvFile.getAbsolutePath() + " ...");
 		createScriptCsv.loadSentencesInTsv(tsvFile);
 		System.out.println("Loading complete.\n");
 
