@@ -16,10 +16,16 @@ import org.apache.commons.cli.ParseException;
 public class CopySpecifiedRecordings {
 
 	public static class Arguments extends CommandLineOptions {
+		String defaultOutputDirName = "temp";
+
 		StringOption dataDir = new StringOption("dir", "data-dir",
 				"Directory containing recordings (<child-dir>/wav/*.wav) and their transcripts (<child-dir>/txt/*.txt)");
 		StringOption tsvFilePath = new StringOption("tsv", "tsv-filepath",
 				"Relative path of TSV file containing sentence-IDs of interest.");
+		StringOption outputDirName = new StringOption("out", "output-dir-name",
+				"Name of output directory where the specified recordings will be saved (default = '"
+						+ defaultOutputDirName + "')",
+				defaultOutputDirName);
 
 		public Arguments() {
 			super();
@@ -27,6 +33,7 @@ public class CopySpecifiedRecordings {
 			tsvFilePath.setRequired(true);
 			options.addOption(dataDir);
 			options.addOption(tsvFilePath);
+			options.addOption(outputDirName);
 		}
 	}
 
@@ -42,11 +49,11 @@ public class CopySpecifiedRecordings {
 		}
 		String dataDirPath = arguments.dataDir.getStringValue();
 		String tsvFilePath = arguments.tsvFilePath.getStringValue();
-
+		String outputDirName = arguments.outputDirName.getStringValue();
 		File dataDir = new File(dataDirPath);
 		File sentenceIdsFile = new File(dataDir, tsvFilePath);
+		File outputDir = new File(dataDir, outputDirName);
 
-		File outputDir = new File(dataDir, "temp");
 		File outputTxtDir = new File(outputDir, "txt");
 		File outputWavDir = new File(outputDir, "wav");
 		outputTxtDir.mkdirs();
