@@ -3,13 +3,11 @@ package ai.bhashini.tts.utils;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 import org.apache.commons.cli.ParseException;
 
@@ -26,37 +24,6 @@ public class CopySpecifiedRecordings {
 			e.printStackTrace();
 		}
 		return sentenceIds;
-	}
-
-	public static void loadTxtAndWavFilePaths(File dataDir, ArrayList<String> sentenceIds, String wavDirName,
-			HashMap<String, String> txtFilePaths, HashMap<String, String> wavFilePaths) {
-		HashSet<String> sentenceIdsMap = new HashSet<String>(sentenceIds);
-		File[] subDirs = MatchWavAndTextFiles.getSubDirs(dataDir);
-		for (File subDir : subDirs) {
-			File txtDir = new File(subDir, "txt");
-			if (txtDir.exists()) {
-				loadFilePaths(txtDir, sentenceIdsMap, txtFilePaths, "txt");
-			}
-			File wavDir = new File(subDir, wavDirName);
-			if (wavDir.exists()) {
-				loadFilePaths(wavDir, sentenceIdsMap, wavFilePaths, wavDirName);
-			}
-		}
-	}
-
-	public static void loadFilePaths(File baseDir, HashSet<String> sentenceIdsMap, HashMap<String, String> filePaths,
-			String extension) {
-		File[] files = baseDir.listFiles(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				String nameWithoutExtension = FileUtils.getFileNameWithoutExtension(name);
-				return sentenceIdsMap.contains(nameWithoutExtension);
-			}
-		});
-		for (File file : files) {
-			String sentenceId = FileUtils.getFileNameWithoutExtension(file.getName());
-			filePaths.put(sentenceId, file.getAbsolutePath());
-		}
 	}
 
 	public static void copyTextAndWavFiles(ArrayList<String> sentenceIds, HashMap<String, String> txtFilePaths,
@@ -132,7 +99,7 @@ public class CopySpecifiedRecordings {
 		HashMap<String, String> txtFilePaths = new HashMap<String, String>();
 		HashMap<String, String> wavFilePaths = new HashMap<String, String>();
 		System.out.println("Parsing txt and wav files in " + dataDir.getAbsolutePath());
-		loadTxtAndWavFilePaths(dataDir, sentenceIds, "wav", txtFilePaths, wavFilePaths);
+		FileUtils.loadTxtAndWavFilePaths(dataDir, sentenceIds, "wav", txtFilePaths, wavFilePaths);
 
 		File outputTxtDir = new File(outputDir, "txt");
 		File outputWavDir = new File(outputDir, "wav");

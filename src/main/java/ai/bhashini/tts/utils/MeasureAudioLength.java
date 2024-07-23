@@ -45,7 +45,7 @@ public class MeasureAudioLength {
 		if (!recursive) {
 			printAudioLength(inputDir, verboseOutput);
 		} else {
-			File[] subDirs = MatchWavAndTextFiles.getSubDirs(new File(inputDir));
+			File[] subDirs = FileUtils.getSubDirs(new File(inputDir));
 			for (File subDir : subDirs) {
 				File wavDir = new File(subDir, subDirName);
 				if (wavDir.exists()) {

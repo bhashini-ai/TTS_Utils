@@ -5,7 +5,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +26,7 @@ public class CheckCharacters {
 
 	void loadTextFilePaths(File dataDir) {
 		txtFilePaths.clear();
-		File[] subDirs = MatchWavAndTextFiles.getSubDirs(dataDir);
+		File[] subDirs = FileUtils.getSubDirs(dataDir);
 		for (File subDir : subDirs) {
 			File wavDir = new File(subDir, "wav");
 			File txtDir = new File(subDir, "txt");
@@ -35,12 +34,7 @@ public class CheckCharacters {
 				if (verbose) {
 					System.out.println("\t" + subDir.getAbsolutePath());
 				}
-				File[] wavFiles = wavDir.listFiles(new FilenameFilter() {
-					@Override
-					public boolean accept(File dir, String name) {
-						return name.endsWith(".wav") && !name.startsWith("._");
-					}
-				});
+				File[] wavFiles = FileUtils.getWavFiles(wavDir);
 				for (File wavFile : wavFiles) {
 					String wavFileName = wavFile.getName();
 					File txtFile = new File(txtDir, wavFileName.replace(".wav", ".txt"));

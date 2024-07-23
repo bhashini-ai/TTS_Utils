@@ -25,7 +25,7 @@ public class MergeRecordedScript {
 	}
 
 	static void createScript(String inputDirPath, String outputFilePath, String prefix) {
-		File[] subDirs = MatchWavAndTextFiles.getSubDirs(new File(inputDirPath));
+		File[] subDirs = FileUtils.getSubDirs(new File(inputDirPath));
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
 			for (File subDir : subDirs) {
 				File txtDir = new File(subDir, "txt");

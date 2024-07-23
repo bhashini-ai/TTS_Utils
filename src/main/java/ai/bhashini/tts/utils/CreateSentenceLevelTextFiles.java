@@ -21,7 +21,7 @@ public class CreateSentenceLevelTextFiles {
 		for (String category : categories) {
 			sentences.putAll(loadScript(new File(scriptsDir, category + scriptSuffix)));
 		}
-		File[] subDirs = MatchWavAndTextFiles.getSubDirs(new File(recordingsDir));
+		File[] subDirs = FileUtils.getSubDirs(new File(recordingsDir));
 		for (File subDir : subDirs) {
 			File wavDir = new File(subDir, "wav");
 			if (!wavDir.exists()) {

@@ -11,11 +11,15 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class FileUtils {
 	public static String getFileNameWithoutExtension(File file, String extension) {
@@ -71,12 +75,61 @@ public class FileUtils {
 		}
 	}
 
-	public static File[] getWavFiles(String inputDirPath) {
-		return getWavFiles(new File(inputDirPath));
+	public static File[] getSubDirs(File dataDir) {
+		File[] subDirs = dataDir.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				return file.isDirectory() && !file.getName().equalsIgnoreCase("filelists")
+						&& !file.getName().equalsIgnoreCase("wavs") && !file.getName().equalsIgnoreCase("evaluation")
+						&& !file.getName().equalsIgnoreCase("script");
+			}
+		});
+		if (subDirs == null) {
+			subDirs = new File[0];
+		}
+		if (subDirs.length > 1) {
+			Arrays.sort(subDirs);
+		}
+		return subDirs;
 	}
 
-	public static File[] getWavFiles(File inputDir) {
-		File[] wavFiles = inputDir.listFiles(new FileFilter() {
+	public static void loadTxtAndWavFilePaths(File dataDir, ArrayList<String> sentenceIds, String wavDirName,
+			HashMap<String, String> txtFilePaths, HashMap<String, String> wavFilePaths) {
+		HashSet<String> sentenceIdsMap = new HashSet<String>(sentenceIds);
+		File[] subDirs = getSubDirs(dataDir);
+		for (File subDir : subDirs) {
+			File txtDir = new File(subDir, "txt");
+			if (txtDir.exists()) {
+				loadFilePaths(txtDir, sentenceIdsMap, txtFilePaths, "txt");
+			}
+			File wavDir = new File(subDir, wavDirName);
+			if (wavDir.exists()) {
+				loadFilePaths(wavDir, sentenceIdsMap, wavFilePaths, wavDirName);
+			}
+		}
+	}
+
+	public static void loadFilePaths(File baseDir, HashSet<String> sentenceIdsMap, HashMap<String, String> filePaths,
+			String extension) {
+		File[] files = baseDir.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				String nameWithoutExtension = FileUtils.getFileNameWithoutExtension(name);
+				return sentenceIdsMap.contains(nameWithoutExtension);
+			}
+		});
+		for (File file : files) {
+			String sentenceId = FileUtils.getFileNameWithoutExtension(file.getName());
+			filePaths.put(sentenceId, file.getAbsolutePath());
+		}
+	}
+
+	public static File[] getWavFiles(String wavDirPath) {
+		return getWavFiles(new File(wavDirPath));
+	}
+
+	public static File[] getWavFiles(File wavDir) {
+		File[] wavFiles = wavDir.listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File file) {
 				return file.getName().endsWith(".wav") && !file.getName().startsWith("._");

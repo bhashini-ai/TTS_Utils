@@ -102,7 +102,7 @@ public class CreateFileListsForFastPitchTraining {
 	}
 
 	public void loadWavTextMapping(File dataDir) {
-		File[] subDirs = MatchWavAndTextFiles.getSubDirs(dataDir);
+		File[] subDirs = FileUtils.getSubDirs(dataDir);
 		for (File subDir : subDirs) {
 			File wavDir = new File(subDir, "wav");
 			File txtDir = new File(subDir, "txt");

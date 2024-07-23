@@ -73,7 +73,7 @@ public class RecordingStats {
 	public static void main(String[] args) {
 		File dataDir = new File(args[0]);
 		RecordingStats totalRecordingStats = new RecordingStats();
-		File[] subDirs = MatchWavAndTextFiles.getSubDirs(dataDir);
+		File[] subDirs = FileUtils.getSubDirs(dataDir);
 		System.out.println("WavDir:\t#Sentences\tDuration");
 		int offset = dataDir.getAbsolutePath().length() + 1;
 		for (File subDir : subDirs) {
