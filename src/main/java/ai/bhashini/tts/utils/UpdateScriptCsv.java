@@ -95,20 +95,6 @@ public class UpdateScriptCsv {
 		}
 	}
 
-	void saveUpdatedScript(File csvFile) {
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvFile))) {
-			bw.write(ScriptFields.getHeader() + "\n");
-			ArrayList<String> ids = new ArrayList<>(sentencesInSpecifiedDir.keySet());
-			Collections.sort(ids);
-			for (String id : ids) {
-				ScriptFields scriptFields = sentencesInSpecifiedDir.get(id);
-				bw.write(scriptFields.toString() + "\n");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
 	void loadSentencesInSpecifiedDirAndUpdateScript(File recordingsDir) {
 		sentencesInSpecifiedDir.clear();
 		File txtDir = new File(recordingsDir, "txt");
@@ -134,6 +120,20 @@ public class UpdateScriptCsv {
 				}
 				sentencesInSpecifiedDir.put(id, scriptFieldsInTSV);
 			}
+		}
+	}
+
+	void saveUpdatedScript(File csvFile) {
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvFile))) {
+			bw.write(ScriptFields.getHeader() + "\n");
+			ArrayList<String> ids = new ArrayList<>(sentencesInSpecifiedDir.keySet());
+			Collections.sort(ids);
+			for (String id : ids) {
+				ScriptFields scriptFields = sentencesInSpecifiedDir.get(id);
+				bw.write(scriptFields.toString() + "\n");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
