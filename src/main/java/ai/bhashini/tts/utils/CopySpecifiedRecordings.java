@@ -11,16 +11,46 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import org.apache.commons.cli.ParseException;
+
 public class CopySpecifiedRecordings {
 
+	public static class Arguments extends CommandLineOptions {
+		StringOption dataDir = new StringOption("dir", "data-dir",
+				"Directory containing recordings (<child-dir>/wav/*.wav) and their transcripts (<child-dir>/txt/*.txt)");
+		StringOption tsvFilePath = new StringOption("tsv", "tsv-filepath",
+				"Relative path of TSV file containing sentence-IDs of interest.");
+
+		public Arguments() {
+			super();
+			dataDir.setRequired(true);
+			tsvFilePath.setRequired(true);
+			options.addOption(dataDir);
+			options.addOption(tsvFilePath);
+		}
+	}
+
 	public static void main(String[] args) {
-		File recordingsDir = new File(args[0]);
-		File outputDir = new File(recordingsDir, "temp");
+		Arguments arguments = new Arguments();
+		try {
+			arguments.parse(args);
+			arguments.printValues();
+		} catch (ParseException e) {
+			e.printStackTrace();
+			arguments.printHelp(UpdateScriptCsv.class.getCanonicalName());
+			return;
+		}
+		String dataDirPath = arguments.dataDir.getStringValue();
+		String tsvFilePath = arguments.tsvFilePath.getStringValue();
+
+		File dataDir = new File(dataDirPath);
+		File sentenceIdsFile = new File(dataDir, tsvFilePath);
+
+		File outputDir = new File(dataDir, "temp");
 		File outputTxtDir = new File(outputDir, "txt");
 		File outputWavDir = new File(outputDir, "wav");
 		outputTxtDir.mkdirs();
 		outputWavDir.mkdirs();
-		File sentenceIdsFile = new File(args[1]);
 		System.out.println("Parsing sentenceIds in " + sentenceIdsFile.getAbsolutePath());
 		ArrayList<String> sentenceIds = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(new FileReader(sentenceIdsFile))) {
@@ -34,8 +64,8 @@ public class CopySpecifiedRecordings {
 		}
 		HashMap<String, String> txtFilePaths = new HashMap<String, String>();
 		HashMap<String, String> wavFilePaths = new HashMap<String, String>();
-		System.out.println("Parsing txt and wav files in " + recordingsDir.getAbsolutePath());
-		loadTxtAndWavFilePaths(recordingsDir, sentenceIds, "wav", txtFilePaths, wavFilePaths);
+		System.out.println("Parsing txt and wav files in " + dataDir.getAbsolutePath());
+		loadTxtAndWavFilePaths(dataDir, sentenceIds, "wav", txtFilePaths, wavFilePaths);
 		System.out.println("# of matching txt files found = " + txtFilePaths.size());
 		System.out.println("# of matching wav files found = " + wavFilePaths.size() + "\n");
 		for (String sentenceId: sentenceIds) {

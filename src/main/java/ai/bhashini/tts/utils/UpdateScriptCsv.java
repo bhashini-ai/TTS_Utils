@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
+import org.apache.commons.cli.ParseException;
+
 public class UpdateScriptCsv {
 	static class ScriptFields {
 		String id;
@@ -69,13 +71,13 @@ public class UpdateScriptCsv {
 	private HashMap<String, ScriptFields> sentences = new HashMap<>();
 	private HashMap<String, ScriptFields> relevantSentences = new HashMap<>();
 
-	void loadScriptTsv(String tsvFilePath) {
+	void loadScriptTsv(File tsvFile) {
 		sentences.clear();
-		try (BufferedReader br = new BufferedReader(new FileReader(tsvFilePath))) {
+		try (BufferedReader br = new BufferedReader(new FileReader(tsvFile))) {
 			String line = br.readLine();
 			HashMap<String, Integer> fieldIndices = ScriptFields.getFieldIndices(line.split("\t"));
 			if (!ScriptFields.checkFieldIndices(fieldIndices)) {
-				System.out.println(tsvFilePath + " is missing mandatory fields");
+				System.out.println(tsvFile.getAbsolutePath() + " is missing mandatory fields");
 				return;
 			}
 			while ((line = br.readLine()) != null) {
@@ -92,8 +94,8 @@ public class UpdateScriptCsv {
 		}
 	}
 
-	void saveScriptCsv(String tsvFilePath) {
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(tsvFilePath))) {
+	void saveScriptCsv(File csvFile) {
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvFile))) {
 			bw.write(ScriptFields.getHeader() + "\n");
 			ArrayList<String> ids = new ArrayList<>(relevantSentences.keySet());
 			Collections.sort(ids);
@@ -106,7 +108,7 @@ public class UpdateScriptCsv {
 		}
 	}
 
-	void updateScript(String recordingsDir) {
+	void updateScript(File recordingsDir) {
 		File txtDir = new File(recordingsDir, "txt");
 		if (!txtDir.exists()) {
 			return;
@@ -133,23 +135,50 @@ public class UpdateScriptCsv {
 		}
 	}
 
+	public static class Arguments extends CommandLineOptions {
+		StringOption dataDir = new StringOption("dir", "data-dir",
+				"Directory containing recordings (<child-dir>/wav/*.wav) and their transcripts (<child-dir>/txt/*.txt)");
+		StringOption tsvFilePath = new StringOption("tsv", "tsv-filepath",
+				"Relative path of TSV file containing transcripts of interest.");
+
+		public Arguments() {
+			super();
+			dataDir.setRequired(true);
+			tsvFilePath.setRequired(true);
+			options.addOption(dataDir);
+			options.addOption(tsvFilePath);
+		}
+	}
+
 	public static void main(String[] args) {
-		String tsvFilePath = args[0];
-		String recordingsDir = args[1];
+		Arguments arguments = new Arguments();
+		try {
+			arguments.parse(args);
+			arguments.printValues();
+		} catch (ParseException e) {
+			e.printStackTrace();
+			arguments.printHelp(UpdateScriptCsv.class.getCanonicalName());
+			return;
+		}
+		String dataDirPath = arguments.dataDir.getStringValue();
+		String tsvFilePath = arguments.tsvFilePath.getStringValue();
+
+		File dataDir = new File(dataDirPath);
+		File tsvFile = new File(dataDir, tsvFilePath);
+		File csvFile = new File(dataDir, tsvFilePath.replace(".tsv", ".csv"));
 
 		UpdateScriptCsv updateScriptCsv = new UpdateScriptCsv();
 
-		System.out.println("Loading " + tsvFilePath + " ...");
-		updateScriptCsv.loadScriptTsv(tsvFilePath);
+		System.out.println("Loading " + tsvFile.getAbsolutePath() + " ...");
+		updateScriptCsv.loadScriptTsv(tsvFile);
 		System.out.println("Loading complete.\n");
 
 		System.out.println("Checking recorded sentences and updating script ...");
-		updateScriptCsv.updateScript(recordingsDir);
+		updateScriptCsv.updateScript(dataDir);
 		System.out.println("Updating complete.\n");
 
-		String csvFilePath = tsvFilePath.replace(".tsv", ".csv");
-		updateScriptCsv.saveScriptCsv(csvFilePath);
-		System.out.println("Created " + csvFilePath);
+		updateScriptCsv.saveScriptCsv(csvFile);
+		System.out.println("Created " + csvFile.getAbsolutePath());
 	}
 
 }
