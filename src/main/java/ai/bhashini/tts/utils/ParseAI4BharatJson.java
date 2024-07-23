@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 
+import org.apache.commons.cli.ParseException;
+
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 
@@ -34,10 +36,8 @@ public class ParseAI4BharatJson {
 		SentenceInfo[] train;
 	}
 
-	void loadJsonFiles(File inputFolder) {
+	void loadJsonFiles(File testFile, File trainFile) {
 		// https://stackoverflow.com/questions/29965764/how-to-parse-json-file-with-gson
-		File testFile = new File(inputFolder, "metadata_test.json");
-		File trainFile = new File(inputFolder, "metadata_train.json");
 		Gson gson = new Gson();
 		System.out.println("Loading " + testFile.getAbsolutePath() + " ...");
 		System.out.println("Loading " + trainFile.getAbsolutePath() + " ...");
@@ -67,8 +67,8 @@ public class ParseAI4BharatJson {
 		}
 	}
 
-	void createScriptFiles(File outputFolder) {
-		outputFolder.mkdirs();
+	void createScriptFiles(File outputDir) {
+		outputDir.mkdirs();
 		for (String category : categorySpecificSentences.keySet()) {
 			ArrayList<SentenceInfo> sentences = categorySpecificSentences.get(category);
 			sentences.sort(new Comparator<SentenceInfo>() {
@@ -77,7 +77,7 @@ public class ParseAI4BharatJson {
 					return s1.filename.compareTo(s2.filename);
 				}
 			});
-			File outputFile = new File(outputFolder, category + ".txt");
+			File outputFile = new File(outputDir, category + ".txt");
 			System.out.println("Creating " + outputFile.getAbsolutePath());
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile))) {
 				for (SentenceInfo s : sentences) {
@@ -89,12 +89,56 @@ public class ParseAI4BharatJson {
 		}
 	}
 
+	public static class Arguments extends CommandLineOptions {
+		String defaultScriptDirName = "script";
+		String defaultTestJsonFilename = "metadata_test.json";
+		String defaultTrainJsonFilename = "metadata_train.json";
+
+		StringOption inputDir = new StringOption("in", "input-dir",
+				"Input directory containing the transcript JSON files from AI4Bharat");
+		StringOption outputDirName = new StringOption("out", "output-dir-name",
+				"Name of output directory where the category-wise script files will be saved (default = '"
+						+ defaultScriptDirName + "')",
+				defaultScriptDirName);
+		StringOption testJsonFilename = new StringOption("test", "test-json-filename",
+				"Name of test JSON file " + "(default = '" + defaultTestJsonFilename + "')", defaultTestJsonFilename);
+		StringOption trainJsonFilename = new StringOption("train", "train-json-filename",
+				"Name of train JSON file " + "(default = '" + defaultTrainJsonFilename + "')", defaultTrainJsonFilename);
+
+		public Arguments() {
+			super();
+			inputDir.setRequired(true);
+			options.addOption(inputDir);
+			options.addOption(outputDirName);
+			options.addOption(testJsonFilename);
+			options.addOption(trainJsonFilename);
+		}
+	}
+
 	public static void main(String[] args) {
-		File inputFolder = new File(args[0]);
+		Arguments arguments = new Arguments();
+		try {
+			arguments.parse(args);
+			arguments.printValues();
+		} catch (ParseException e) {
+			e.printStackTrace();
+			arguments.printHelp(ParseAI4BharatJson.class.getCanonicalName());
+			return;
+		}
+
+		String inputDirPath = arguments.inputDir.getStringValue();
+		String outputDirName = arguments.outputDirName.getStringValue();
+		String testJsonFilename = arguments.testJsonFilename.getStringValue();
+		String trainJsonFilename = arguments.trainJsonFilename.getStringValue();
+		File inputDir = new File(inputDirPath);
+		File outputDir = new File(inputDir, outputDirName);
+		File testFile = new File(inputDir, testJsonFilename);
+		File trainFile = new File(inputDir, trainJsonFilename);
+
 		ParseAI4BharatJson parseAI4BharatJson = new ParseAI4BharatJson();
-		parseAI4BharatJson.loadJsonFiles(inputFolder);
+		parseAI4BharatJson.loadJsonFiles(testFile, trainFile);
 		parseAI4BharatJson.categorizeSentences();
-		parseAI4BharatJson.createScriptFiles(new File(inputFolder, "script"));
+		parseAI4BharatJson.createScriptFiles(outputDir);
 	}
 
 }
