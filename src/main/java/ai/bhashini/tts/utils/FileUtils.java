@@ -114,12 +114,12 @@ public class FileUtils {
 		File[] files = baseDir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				String nameWithoutExtension = FileUtils.getFileNameWithoutExtension(name);
+				String nameWithoutExtension = getFileNameWithoutExtension(name);
 				return sentenceIdsMap.contains(nameWithoutExtension);
 			}
 		});
 		for (File file : files) {
-			String sentenceId = FileUtils.getFileNameWithoutExtension(file.getName());
+			String sentenceId = getFileNameWithoutExtension(file.getName());
 			filePaths.put(sentenceId, file.getAbsolutePath());
 		}
 	}

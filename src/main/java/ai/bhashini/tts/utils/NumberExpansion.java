@@ -424,6 +424,26 @@ public class NumberExpansion {
 		return text;
 	}
 
+	public void expandNumbersInFile(String inputFilePath, String outputFilePath, boolean retainNumbersForValidation,
+			boolean removeNumbersAndCurlyBrackets) {
+		try (BufferedReader br = new BufferedReader(new FileReader(inputFilePath));
+				BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				String newContent;
+				if (removeNumbersAndCurlyBrackets) {
+					newContent = removeNumbersAndCurlyBrackets(line);
+				} else {
+					newContent = expandNumbers(line, retainNumbersForValidation);
+				}
+				bw.write(newContent + "\n");
+			}
+			System.out.println("Output saved to " + outputFilePath);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static class Arguments extends CommandLineOptions {
 		StringOption inputFilePath = new StringOption("in", "input", "Path of input text file.");
 		StringOption language = new StringOption("lang", "language", "Language of the input text file");
@@ -467,8 +487,8 @@ public class NumberExpansion {
 		String outputFilePath = arguments.outputFilePath.getStringValue();
 		boolean retainNumbersForValidation = arguments.retainNumbersForValidation.getBoolValue();
 		boolean removeNumbersAndCurlyBrackets = arguments.removeNumbersAndCurlyBrackets.getBoolValue();
-		int printtStartNumber = arguments.printStartNumber.getIntValue();
-		int printtEndNumber = arguments.printEndNumber.getIntValue();
+		int printStartNumber = arguments.printStartNumber.getIntValue();
+		int printEndNumber = arguments.printEndNumber.getIntValue();
 
 		Language language;
 		try {
@@ -482,8 +502,8 @@ public class NumberExpansion {
 			return;
 		}
 		NumberExpansion numberExpansion = NumberExpansion.getInstance(language);
-		if (printtEndNumber > printtStartNumber) {
-			for (int n = printtStartNumber; n <= printtEndNumber; n++) {
+		if (printEndNumber > printStartNumber) {
+			for (int n = printStartNumber; n <= printEndNumber; n++) {
 				System.out.println(n + ": " + numberExpansion.expandNumber(n));
 			}
 		}
@@ -495,21 +515,6 @@ public class NumberExpansion {
 			String suffix = removeNumbersAndCurlyBrackets ? "_cleaned" : "_expanded";
 			outputFilePath = inputFilePath.substring(0, indx) + suffix + inputFilePath.substring(indx);
 		}
-		try (BufferedReader br = new BufferedReader(new FileReader(inputFilePath));
-				BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
-			String line;
-			while ((line = br.readLine()) != null) {
-				String newContent;
-				if (removeNumbersAndCurlyBrackets) {
-					newContent = numberExpansion.removeNumbersAndCurlyBrackets(line);
-				} else {
-					newContent = numberExpansion.expandNumbers(line, retainNumbersForValidation);
-				}
-				bw.write(newContent + "\n");
-			}
-			System.out.println("Output saved to " + outputFilePath);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		numberExpansion.expandNumbersInFile(inputFilePath, outputFilePath, retainNumbersForValidation, removeNumbersAndCurlyBrackets);
 	}
 }
