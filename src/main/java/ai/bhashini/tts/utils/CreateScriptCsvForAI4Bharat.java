@@ -16,7 +16,31 @@ import org.apache.commons.cli.ParseException;
 
 public class CreateScriptCsvForAI4Bharat {
 	public enum FieldOfInterest {
-		ID, Sentence, Language, Speaker, Style, Category
+		ID, Sentence, Language, Speaker, Style, Category;
+
+		public int index = -1;
+
+		public static void loadIndices(String[] headerContents) {
+			for (int i = 0; i < headerContents.length; i++) {
+				for (FieldOfInterest fieldOfInterest : values()) {
+					if (headerContents[i].equalsIgnoreCase(fieldOfInterest.toString())) {
+						fieldOfInterest.index = i;
+						break;
+					}
+				}
+			}
+		}
+
+		public static boolean checkValidIndices() {
+			boolean missingFields = false;
+			for (FieldOfInterest fieldOfInterest : values()) {
+				if (fieldOfInterest.index == -1) {
+					System.out.println("Missing field: " + fieldOfInterest);
+					missingFields = true;
+				}
+			}
+			return !missingFields;
+		}
 	}
 
 	static class ScriptFields {
@@ -32,13 +56,13 @@ public class CreateScriptCsvForAI4Bharat {
 					+ FieldOfInterest.Speaker + "," + FieldOfInterest.Style + "," + FieldOfInterest.Category;
 		}
 
-		public ScriptFields(String[] contents, HashMap<FieldOfInterest, Integer> fieldIndices) {
-			this.id = contents[fieldIndices.get(FieldOfInterest.ID)];
-			this.sentence = contents[fieldIndices.get(FieldOfInterest.Sentence)];
-			this.language = contents[fieldIndices.get(FieldOfInterest.Language)];
-			this.speaker = contents[fieldIndices.get(FieldOfInterest.Speaker)];
-			this.style = contents[fieldIndices.get(FieldOfInterest.Style)];
-			this.category = contents[fieldIndices.get(FieldOfInterest.Category)];
+		public ScriptFields(String[] contents) {
+			this.id = contents[FieldOfInterest.ID.index];
+			this.sentence = contents[FieldOfInterest.Sentence.index];
+			this.language = contents[FieldOfInterest.Language.index];
+			this.speaker = contents[FieldOfInterest.Speaker.index];
+			this.style = contents[FieldOfInterest.Style.index];
+			this.category = contents[FieldOfInterest.Category.index];
 		}
 
 		@Override
@@ -47,46 +71,23 @@ public class CreateScriptCsvForAI4Bharat {
 			return id + "," + csvCompatibleSentence + "," + language + "," + speaker + "," + style + "," + category;
 		}
 
-		public static HashMap<FieldOfInterest, Integer> getFieldIndices(String[] headerContents) {
-			HashMap<FieldOfInterest, Integer> indices = new HashMap<>();
-			for (int i = 0; i < headerContents.length; i++) {
-				for (FieldOfInterest fieldOfInterest : FieldOfInterest.values()) {
-					if (headerContents[i].equalsIgnoreCase(fieldOfInterest.toString())) {
-						indices.put(fieldOfInterest, i);
-						break;
-					}
-				}
-			}
-			return indices;
-		}
-
-		public static boolean checkFieldIndices(HashMap<FieldOfInterest, Integer> indices) {
-			boolean missingFields = false;
-			for (FieldOfInterest fieldOfInterest : FieldOfInterest.values()) {
-				if (!indices.containsKey(fieldOfInterest)) {
-					System.out.println("Missing field: " + fieldOfInterest);
-					missingFields = true;
-				}
-			}
-			return !missingFields;
-		}
 	}
 
 	private HashMap<String, ScriptFields> sentencesInTSV = new HashMap<>();
 	private HashMap<String, ScriptFields> sentencesInSpecifiedDir = new HashMap<>();
 
-	void loadSentencesInTsv(File tsvFile) {
+	boolean loadSentencesInTsv(File tsvFile) {
 		sentencesInTSV.clear();
 		try (BufferedReader br = new BufferedReader(new FileReader(tsvFile))) {
 			String line = br.readLine();
-			HashMap<FieldOfInterest, Integer> fieldIndices = ScriptFields.getFieldIndices(line.split("\t"));
-			if (!ScriptFields.checkFieldIndices(fieldIndices)) {
+			FieldOfInterest.loadIndices(line.split("\t"));
+			if (!FieldOfInterest.checkValidIndices()) {
 				System.out.println(tsvFile.getAbsolutePath() + " is missing mandatory fields");
-				return;
+				return false;
 			}
 			while ((line = br.readLine()) != null) {
 				try {
-					ScriptFields scriptFields = new ScriptFields(line.split("\t"), fieldIndices);
+					ScriptFields scriptFields = new ScriptFields(line.split("\t"));
 					sentencesInTSV.put(scriptFields.id, scriptFields);
 				} catch (Exception e) {
 					System.out.println("Error in line: " + line);
@@ -96,6 +97,7 @@ public class CreateScriptCsvForAI4Bharat {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return true;
 	}
 
 	void loadSentencesInSpecifiedDirAndUpdateScript(File recordingsDir) {
@@ -173,7 +175,9 @@ public class CreateScriptCsvForAI4Bharat {
 
 		CreateScriptCsvForAI4Bharat createScriptCsv = new CreateScriptCsvForAI4Bharat();
 		System.out.println("\nLoading " + tsvFile.getAbsolutePath() + " ...");
-		createScriptCsv.loadSentencesInTsv(tsvFile);
+		if (!createScriptCsv.loadSentencesInTsv(tsvFile)) {
+			return;
+		}
 		System.out.println("Loading complete.\n");
 
 		System.out.println("Checking recorded sentences and updating script ...");
