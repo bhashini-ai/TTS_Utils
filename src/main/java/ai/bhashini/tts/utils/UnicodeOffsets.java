@@ -57,7 +57,7 @@ public enum UnicodeOffsets {
     AI_LENGTH_MARK(0x56),
     AU_LENGTH_MARK(0x57);
 
-	int offset;
+	final int offset;
 
 	private UnicodeOffsets(int offset) {
 		this.offset = offset;
