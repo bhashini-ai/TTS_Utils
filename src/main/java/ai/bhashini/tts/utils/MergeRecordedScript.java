@@ -12,15 +12,13 @@ public class MergeRecordedScript {
 
 	public static void main(String[] args) {
 		String inputDirPath = args[0];
-		String outputDirPath = args[1];
-		String prefix = args[2];
-		new File(outputDirPath).mkdirs();
+		String prefix = args[1];
 		File scriptsDir = new File(inputDirPath, "script");
 		ArrayList<String> categories = CreateSentenceLevelTextFiles.getScriptCategories(scriptsDir, ".txt");
 		for (String category : categories) {
-			String outputFilePath = new File(outputDirPath, category + ".txt").getAbsolutePath();
+			String outputFilePath = new File(scriptsDir, category + "_new.txt").getAbsolutePath();
 			System.out.println("Creating " + outputFilePath);
-			createScript(inputDirPath, outputFilePath, prefix + "_" + category + "_");
+			createScript(inputDirPath, outputFilePath, prefix);
 		}
 	}
 
