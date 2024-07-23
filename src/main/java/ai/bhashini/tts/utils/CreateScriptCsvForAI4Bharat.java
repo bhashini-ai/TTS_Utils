@@ -14,7 +14,7 @@ import java.util.HashMap;
 
 import org.apache.commons.cli.ParseException;
 
-public class UpdateScriptCsv {
+public class CreateScriptCsvForAI4Bharat {
 	static class ScriptFields {
 		String id;
 		String sentence;
@@ -159,7 +159,7 @@ public class UpdateScriptCsv {
 			arguments.printValues();
 		} catch (ParseException e) {
 			e.printStackTrace();
-			arguments.printHelp(UpdateScriptCsv.class.getCanonicalName());
+			arguments.printHelp(CreateScriptCsvForAI4Bharat.class.getCanonicalName());
 			return;
 		}
 		String recordingsDirPath = arguments.recordingsDir.getStringValue();
@@ -168,16 +168,16 @@ public class UpdateScriptCsv {
 		File tsvFile = new File(tsvFilePath);
 		File csvFile = new File(tsvFilePath.replace(".tsv", ".csv"));
 
-		UpdateScriptCsv updateScriptCsv = new UpdateScriptCsv();
+		CreateScriptCsvForAI4Bharat createScriptCsv = new CreateScriptCsvForAI4Bharat();
 		System.out.println("Loading " + tsvFile.getAbsolutePath() + " ...");
-		updateScriptCsv.loadSentencesInTsv(tsvFile);
+		createScriptCsv.loadSentencesInTsv(tsvFile);
 		System.out.println("Loading complete.\n");
 
 		System.out.println("Checking recorded sentences and updating script ...");
-		updateScriptCsv.loadSentencesInSpecifiedDirAndUpdateScript(recordingsDir);
+		createScriptCsv.loadSentencesInSpecifiedDirAndUpdateScript(recordingsDir);
 		System.out.println("Updating complete.\n");
 
-		updateScriptCsv.saveUpdatedScript(csvFile);
+		createScriptCsv.saveUpdatedScript(csvFile);
 		System.out.println("Created " + csvFile.getAbsolutePath());
 	}
 
