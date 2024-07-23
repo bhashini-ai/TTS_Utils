@@ -438,7 +438,6 @@ public class NumberExpansion {
 				}
 				bw.write(newContent + "\n");
 			}
-			System.out.println("Output saved to " + outputFilePath);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -511,10 +510,11 @@ public class NumberExpansion {
 			return;
 		}
 		if (outputFilePath == null) {
-			int indx = inputFilePath.lastIndexOf('.');
 			String suffix = removeNumbersAndCurlyBrackets ? "_cleaned" : "_expanded";
-			outputFilePath = inputFilePath.substring(0, indx) + suffix + inputFilePath.substring(indx);
+			outputFilePath = FileUtils.addSuffixToFilePath(inputFilePath, suffix);
 		}
+		System.out.println("Processing numbers in " + inputFilePath);
 		numberExpansion.expandNumbersInFile(inputFilePath, outputFilePath, retainNumbersForValidation, removeNumbersAndCurlyBrackets);
+		System.out.println("Output saved to " + outputFilePath);
 	}
 }

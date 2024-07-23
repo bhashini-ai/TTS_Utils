@@ -35,7 +35,12 @@ public class FileUtils {
 		return fileName.substring(0, end);
     }
 
-    public static String getFileContents(String filePath) {
+	public static String addSuffixToFilePath(String filePath, String suffix) {
+		int indx = filePath.lastIndexOf('.');
+		return filePath.substring(0, indx) + suffix + filePath.substring(indx);
+	}
+
+	public static String getFileContents(String filePath) {
         StringBuffer strBuffer = new StringBuffer();
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
