@@ -37,7 +37,7 @@ public class CopySpecifiedRecordings {
 			arguments.printValues();
 		} catch (ParseException e) {
 			e.printStackTrace();
-			arguments.printHelp(UpdateScriptCsv.class.getCanonicalName());
+			arguments.printHelp(CopySpecifiedRecordings.class.getCanonicalName());
 			return;
 		}
 		String dataDirPath = arguments.dataDir.getStringValue();
