@@ -63,13 +63,19 @@ public class AbbreviationExpansion {
 		return newText;
 	}
 
-	public void expandAbbreviationsInFile(String inputFilePath, String outputFilePath) {
+	public void expandAbbreviationsInFile(String inputFilePath, String outputFilePath, boolean printDifferences) {
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFilePath));
 				BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
 			String line;
 			while ((line = br.readLine()) != null) {
-				String newContent = expandAbbreviations(line);
-				bw.write(newContent + "\n");
+				String[] contents = line.split("\t");
+				String sentenceId = contents.length == 1 ? "" : contents[0];
+				String oldContent = contents[contents.length == 1 ? 0 : 1];
+				String newContent = expandAbbreviations(oldContent);
+				bw.write(sentenceId + "\t" + newContent + "\n");
+				if (printDifferences && !newContent.equals(oldContent)) {
+					System.out.println(sentenceId + "\n\t" + oldContent + "\n\t" + newContent);
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -81,6 +87,7 @@ public class AbbreviationExpansion {
 		StringOption language = new StringOption("lang", "language", "Language of the input text file");
 		StringOption outputFilePath = new StringOption("out", "output",
 				"Path of output text file. If this is not specified, the output will be saved in the same directpory as that of the input with '_expanded' added to the filename.");
+		BooleanOption verbose = new BooleanOption("v", "verbose", "Print sentences where abbreviations are found.");
 
 		public Arguments() {
 			super();
@@ -88,6 +95,7 @@ public class AbbreviationExpansion {
 			options.addOption(inputFilePath);
 			options.addOption(language);
 			options.addOption(outputFilePath);
+			options.addOption(verbose);
 		}
 	}
 
@@ -104,6 +112,7 @@ public class AbbreviationExpansion {
 		String inputFilePath = arguments.inputFilePath.getStringValue();
 		String languageStr = arguments.language.getStringValue();
 		String outputFilePath = arguments.outputFilePath.getStringValue();
+		boolean verbose = arguments.verbose.getBoolValue();
 
 		Language language;
 		try {
@@ -123,7 +132,7 @@ public class AbbreviationExpansion {
 
 		AbbreviationExpansion abbreviationExpansion = AbbreviationExpansion.getInstance(language);
 		System.out.println("Expanding abbreviations in " + inputFilePath);
-		abbreviationExpansion.expandAbbreviationsInFile(inputFilePath, outputFilePath);
+		abbreviationExpansion.expandAbbreviationsInFile(inputFilePath, outputFilePath, verbose);
 		System.out.println("Output saved to " + outputFilePath);
 	}
 
