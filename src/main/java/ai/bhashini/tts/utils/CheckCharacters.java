@@ -209,6 +209,20 @@ public class CheckCharacters {
 		return newTxt;
 	}
 
+	void expandAbbreviationsInTranscriptFiles(Language language) {
+		AbbreviationExpansion abbreviationExpansion = AbbreviationExpansion.getInstance(language);
+		for (String txtFilePath : txtFilePaths) {
+			String txt = FileUtils.getFileContents(txtFilePath).replaceAll("\n", " ").trim();
+			String newTxt = abbreviationExpansion.expandAbbreviations(txt);
+			if (!newTxt.contentEquals(txt)) {
+				if (verbose) {
+					System.out.println(txtFilePath + "\n\t" + txt + "\n\t" + newTxt);
+				}
+				FileUtils.createFileWithContents(txtFilePath, newTxt);
+			}
+		}
+	}
+
 	void replaceAll() {
 		for (String txtFilePath : txtFilePaths) {
 			String txt = FileUtils.getFileContents(txtFilePath).replaceAll("\n", " ").trim();
@@ -287,6 +301,8 @@ public class CheckCharacters {
 				defaultTranscriptsWithInvalidCharactersFilePath);
 		BooleanOption concatenateAgain = new BooleanOption("recreate", "concatenate-again",
 				"Force recreation of concatenated-text and unique-characters files");
+		BooleanOption expandAbbreviations = new BooleanOption("xabbr", "expand-abbreviations",
+				"Expand various abbreviations in the transcript files");
 		BooleanOption inplaceReplacements = new BooleanOption("inplace", "inplace-replacements",
 				"Do character replacements in the original transcript files");
 		BooleanOption verbose = new BooleanOption("v", "verbose", "Print each file being processed");
@@ -305,6 +321,7 @@ public class CheckCharacters {
 			options.addOption(transcriptsWithEnglishLettersFilePath);
 			options.addOption(transcriptsWithInvalidCharactersFilePath);
 			options.addOption(concatenateAgain);
+			options.addOption(expandAbbreviations);
 			options.addOption(inplaceReplacements);
 			options.addOption(verbose);
 		}
@@ -331,6 +348,7 @@ public class CheckCharacters {
 		String transcriptsWithEnglishLettersFilePath = arguments.transcriptsWithEnglishLettersFilePath.getStringValue();
 		String transcriptsWithInvalidCharactersFilePath = arguments.transcriptsWithInvalidCharactersFilePath.getStringValue();
 		boolean concatenateAgain = arguments.concatenateAgain.getBoolValue();
+		boolean expandAbbreviations = arguments.expandAbbreviations.getBoolValue();
 		boolean inplaceReplacements = arguments.inplaceReplacements.getBoolValue();
 		boolean verbose = arguments.verbose.getBoolValue();
 
@@ -352,9 +370,11 @@ public class CheckCharacters {
 		File transcriptsWithInvalidCharactersFile = new File(dataDir, transcriptsWithInvalidCharactersFilePath);
 
 		CheckCharacters checkCharacters = new CheckCharacters(verbose);
-		if (!concatenatedTranscriptsFile.exists() || concatenateAgain) {
+		if (!concatenatedTranscriptsFile.exists() || concatenateAgain || inplaceReplacements) {
 			System.out.println("Checking .txt files in " + dataDir.getAbsolutePath());
 			checkCharacters.loadTextFilePaths(dataDir);
+		}
+		if (!concatenatedTranscriptsFile.exists() || concatenateAgain) {
 			System.out.println("Concatenating all the .txt files to " + concatenatedTranscriptsFile.getAbsolutePath());
 			checkCharacters.concatenateTxtFiles(concatenatedTranscriptsFile);
 			System.out.println("Successfully completed concatenation.");
@@ -375,18 +395,26 @@ public class CheckCharacters {
 			System.out.println("Saved transcripts containing other invalid characters to "
 					+ transcriptsWithInvalidCharactersFile.getAbsolutePath());
 		}
-		if (!replacementsTSVFile.exists()) {
-			System.out.println("Error: Could not find the TSV file containing replacements "
-					+ replacementsTSVFile.getAbsolutePath());
-			return;
+		if (replacementsTSVFile.exists()) {
+			checkCharacters.loadReplacements(replacementsTSVFile);
+			if (inplaceReplacements) {
+				checkCharacters.replaceAll();
+			} else {
+				System.out.println("Replacing specified characters in " + concatenatedTranscriptsFile.getAbsolutePath());
+				checkCharacters.replace(concatenatedTranscriptsFile, prunedTranscriptsFile);
+				System.out.println("Saved pruned transcripts (after replacements) to " + prunedTranscriptsFile.getAbsolutePath());
+			}
 		}
-		checkCharacters.loadReplacements(replacementsTSVFile);
-		if (inplaceReplacements) {
-			checkCharacters.replaceAll();
-		} else {
-			System.out.println("Replacing specified characters in " + concatenatedTranscriptsFile.getAbsolutePath());
-			checkCharacters.replace(concatenatedTranscriptsFile, prunedTranscriptsFile);
-			System.out.println("Saved pruned transcripts (after replacements) to " + prunedTranscriptsFile.getAbsolutePath());
+		if (expandAbbreviations) {
+			if (inplaceReplacements) {
+				checkCharacters.expandAbbreviationsInTranscriptFiles(language);
+			} else {
+				AbbreviationExpansion abbreviationExpansion = AbbreviationExpansion.getInstance(language);
+				System.out.println("Expanding abbreviations in " + concatenatedTranscriptsFile.getAbsolutePath());
+				abbreviationExpansion.expandAbbreviationsInFile(concatenatedTranscriptsFile.getAbsolutePath(),
+						prunedTranscriptsFile.getAbsolutePath(), verbose);
+				System.out.println("Saved transcripts with expansions to " + prunedTranscriptsFile.getAbsolutePath());
+			}
 		}
 	}
 
