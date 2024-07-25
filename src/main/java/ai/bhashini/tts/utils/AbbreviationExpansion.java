@@ -60,6 +60,7 @@ public class AbbreviationExpansion {
 			String replacement = patternsAndReplacements.getProperty(key);
 			newText = pattern.matcher(newText).replaceAll(replacement);
 		}
+		newText = newText.replace("  ", " ");
 		return newText;
 	}
 
