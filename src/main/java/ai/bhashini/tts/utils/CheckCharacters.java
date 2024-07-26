@@ -223,6 +223,20 @@ public class CheckCharacters {
 		}
 	}
 
+	void expandNumbersInTranscriptFiles(Language language, boolean retainNumbersForValidation) {
+		NumberExpansion numberExpansion = NumberExpansion.getInstance(language);
+		for (String txtFilePath : txtFilePaths) {
+			String txt = FileUtils.getFileContents(txtFilePath).replaceAll("\n", " ").trim();
+			String newTxt = numberExpansion.expandNumbers(txt, retainNumbersForValidation);
+			if (!newTxt.contentEquals(txt)) {
+				if (verbose) {
+					System.out.println(txtFilePath + "\n\t" + txt + "\n\t" + newTxt);
+				}
+				FileUtils.createFileWithContents(txtFilePath, newTxt);
+			}
+		}
+	}
+
 	void replaceAll() {
 		for (String txtFilePath : txtFilePaths) {
 			String txt = FileUtils.getFileContents(txtFilePath).replaceAll("\n", " ").trim();
@@ -303,6 +317,10 @@ public class CheckCharacters {
 				"Force recreation of concatenated-text and unique-characters files");
 		BooleanOption expandAbbreviations = new BooleanOption("xabbr", "expand-abbreviations",
 				"Expand various abbreviations in the transcript files");
+		BooleanOption expandNumbers = new BooleanOption("xnums", "expand-numbers",
+				"Expand numbers in the transcript files");
+		BooleanOption retainNumbersForValidation = new BooleanOption("retain", "retain-numbers",
+				"Retain original numbers for validation. Original numbers and their expansion will be enclosed in curly brackets.");
 		BooleanOption inplaceReplacements = new BooleanOption("inplace", "inplace-replacements",
 				"Do character replacements in the original transcript files");
 		BooleanOption verbose = new BooleanOption("v", "verbose", "Print each file being processed");
@@ -322,6 +340,8 @@ public class CheckCharacters {
 			options.addOption(transcriptsWithInvalidCharactersFilePath);
 			options.addOption(concatenateAgain);
 			options.addOption(expandAbbreviations);
+			options.addOption(expandNumbers);
+			options.addOption(retainNumbersForValidation);
 			options.addOption(inplaceReplacements);
 			options.addOption(verbose);
 		}
@@ -349,6 +369,8 @@ public class CheckCharacters {
 		String transcriptsWithInvalidCharactersFilePath = arguments.transcriptsWithInvalidCharactersFilePath.getStringValue();
 		boolean concatenateAgain = arguments.concatenateAgain.getBoolValue();
 		boolean expandAbbreviations = arguments.expandAbbreviations.getBoolValue();
+		boolean expandNumbers = arguments.expandNumbers.getBoolValue();
+		boolean retainNumbersForValidation = arguments.retainNumbersForValidation.getBoolValue();
 		boolean inplaceReplacements = arguments.inplaceReplacements.getBoolValue();
 		boolean verbose = arguments.verbose.getBoolValue();
 
@@ -413,6 +435,17 @@ public class CheckCharacters {
 				System.out.println("Expanding abbreviations in " + concatenatedTranscriptsFile.getAbsolutePath());
 				abbreviationExpansion.expandAbbreviationsInFile(concatenatedTranscriptsFile.getAbsolutePath(),
 						prunedTranscriptsFile.getAbsolutePath(), verbose);
+				System.out.println("Saved transcripts with expansions to " + prunedTranscriptsFile.getAbsolutePath());
+			}
+		}
+		if (expandNumbers) {
+			if (inplaceReplacements) {
+				checkCharacters.expandNumbersInTranscriptFiles(language, retainNumbersForValidation);
+			} else {
+				NumberExpansion numberExpansion = NumberExpansion.getInstance(language);
+				System.out.println("Expanding numbers in " + concatenatedTranscriptsFile.getAbsolutePath());
+				numberExpansion.expandNumbersInFile(concatenatedTranscriptsFile.getAbsolutePath(),
+						prunedTranscriptsFile.getAbsolutePath(), retainNumbersForValidation, false);
 				System.out.println("Saved transcripts with expansions to " + prunedTranscriptsFile.getAbsolutePath());
 			}
 		}
