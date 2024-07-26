@@ -147,6 +147,7 @@ public class CheckCharacters {
 			File transcriptsWithInvalidCharactersFile) {
 		int zero = language.script.digitZero;
 		int nine = language.script.digitNine;
+		NumberExpansion numberExpansion = NumberExpansion.getInstance(language);
 		try (BufferedReader br = new BufferedReader(new FileReader(concatenatedTranscriptsFile));
 				BufferedWriter bwNumbers = new BufferedWriter(new FileWriter(transcriptsWithNumbersFile));
 				BufferedWriter bwEnglishLetters = new BufferedWriter(new FileWriter(transcriptsWithEnglishLettersFile));
@@ -155,12 +156,17 @@ public class CheckCharacters {
 			while ((line = br.readLine()) != null) {
 				String[] contents = line.split("\t");
 				String transcript = contents[1];
+				if (hasNumbers(transcript, zero, nine)) {
+					bwNumbers.write(line + "\n");
+				}
 				if (hasEnglishLetters(transcript)) {
 					bwEnglishLetters.write(line + "\n");
-				} else if (hasNumbers(transcript, zero, nine)) {
-					bwNumbers.write(line + "\n");
-				} else if (hasInvalidCharacters(transcript, validCharacters)) {
-					bwInvalidCharacters.write(line + "\n");
+				} else {
+					transcript = numberExpansion.removeNumbersAndCurlyBrackets(transcript);
+					ArrayList<Character> invalidCharacters = getInvalidCharacters(transcript, validCharacters);
+					if (invalidCharacters.size() > 0) {
+						bwInvalidCharacters.write(line + "\t" + invalidCharacters.toString() + "\n");
+					}
 				}
 			}
 		} catch (IOException e) {
@@ -188,14 +194,15 @@ public class CheckCharacters {
 		return false;
 	}
 
-	public static boolean hasInvalidCharacters(String transcript, HashSet<Character> validCharacters) {
+	public static ArrayList<Character> getInvalidCharacters(String transcript, HashSet<Character> validCharacters) {
+		ArrayList<Character> invalidCharacters = new ArrayList<>();
 		for (int i = 0; i < transcript.length(); i++) {
 			char c = transcript.charAt(i);
 			if (!validCharacters.contains(c)) {
-				return true;
+				invalidCharacters.add(c);
 			}
 		}
-		return false;
+		return invalidCharacters;
 	}
 
 	String replaceText(String txt) {
