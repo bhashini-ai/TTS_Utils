@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.regex.Pattern;
 
 import org.apache.commons.cli.ParseException;
 
@@ -218,10 +217,9 @@ public class CheckCharacters {
 	}
 
 	void removeExtraSpaces() {
-		Pattern pattern = Pattern.compile(" +");
 		for (String txtFilePath : txtFilePaths) {
 			String txt = FileUtils.getFileContents(txtFilePath).replaceAll("\n", " ").trim();
-			String newTxt = pattern.matcher(txt).replaceAll(" ");
+			String newTxt = txt.replaceAll("\\s+", " ");
 			if (!newTxt.contentEquals(txt)) {
 				if (verbose) {
 					System.out.println(txtFilePath + "\n\t" + txt + "\n\t" + newTxt);
@@ -418,7 +416,7 @@ public class CheckCharacters {
 		File transcriptsWithInvalidCharactersFile = new File(dataDir, transcriptsWithInvalidCharactersFilePath);
 
 		CheckCharacters checkCharacters = new CheckCharacters(verbose);
-		if (!concatenatedTranscriptsFile.exists() || concatenateAgain || inplaceReplacements) {
+		if (!concatenatedTranscriptsFile.exists() || concatenateAgain || inplaceReplacements || removeExtraSpaces) {
 			System.out.println("Checking .txt files in " + dataDir.getAbsolutePath());
 			checkCharacters.loadTextFilePaths(dataDir);
 		}
