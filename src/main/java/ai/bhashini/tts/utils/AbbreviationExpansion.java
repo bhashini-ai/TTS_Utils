@@ -14,7 +14,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.cli.ParseException;
 
 public class AbbreviationExpansion {
-	public static final Language[] SUPPORTED_LANGUAGES = { Language.Kannada };
+	public static final Language[] SUPPORTED_LANGUAGES = { Language.Kannada, Language.Telugu, Language.Hindi,
+			Language.Bengali, Language.Marathi };
 
 	protected Language language;
 	protected Properties patternsAndReplacements = new Properties();
