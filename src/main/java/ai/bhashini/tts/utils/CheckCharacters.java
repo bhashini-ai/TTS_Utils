@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.ParseException;
 
@@ -216,6 +217,20 @@ public class CheckCharacters {
 		return newTxt;
 	}
 
+	void removeExtraSpaces() {
+		Pattern pattern = Pattern.compile(" +");
+		for (String txtFilePath : txtFilePaths) {
+			String txt = FileUtils.getFileContents(txtFilePath).replaceAll("\n", " ").trim();
+			String newTxt = pattern.matcher(txt).replaceAll(" ");
+			if (!newTxt.contentEquals(txt)) {
+				if (verbose) {
+					System.out.println(txtFilePath + "\n\t" + txt + "\n\t" + newTxt);
+				}
+				FileUtils.createFileWithContents(txtFilePath, newTxt);
+			}
+		}
+	}
+
 	void expandAbbreviationsInTranscriptFiles(Language language) {
 		AbbreviationExpansion abbreviationExpansion = AbbreviationExpansion.getInstance(language);
 		for (String txtFilePath : txtFilePaths) {
@@ -328,6 +343,8 @@ public class CheckCharacters {
 				"Expand numbers in the transcript files");
 		BooleanOption retainNumbersForValidation = new BooleanOption("retain", "retain-numbers",
 				"Retain original numbers for validation. Original numbers and their expansion will be enclosed in curly brackets.");
+		BooleanOption removeExtraSpaces = new BooleanOption("xSpaces", "remove-extra-spaces",
+				"Replace multiple spaces with a single space in the original transcript files");
 		BooleanOption inplaceReplacements = new BooleanOption("inplace", "inplace-replacements",
 				"Do character replacements in the original transcript files");
 		BooleanOption verbose = new BooleanOption("v", "verbose", "Print each file being processed");
@@ -349,6 +366,7 @@ public class CheckCharacters {
 			options.addOption(expandAbbreviations);
 			options.addOption(expandNumbers);
 			options.addOption(retainNumbersForValidation);
+			options.addOption(removeExtraSpaces);
 			options.addOption(inplaceReplacements);
 			options.addOption(verbose);
 		}
@@ -378,6 +396,7 @@ public class CheckCharacters {
 		boolean expandAbbreviations = arguments.expandAbbreviations.getBoolValue();
 		boolean expandNumbers = arguments.expandNumbers.getBoolValue();
 		boolean retainNumbersForValidation = arguments.retainNumbersForValidation.getBoolValue();
+		boolean removeExtraSpaces = arguments.removeExtraSpaces.getBoolValue();
 		boolean inplaceReplacements = arguments.inplaceReplacements.getBoolValue();
 		boolean verbose = arguments.verbose.getBoolValue();
 
@@ -433,6 +452,9 @@ public class CheckCharacters {
 				checkCharacters.replace(concatenatedTranscriptsFile, prunedTranscriptsFile);
 				System.out.println("Saved pruned transcripts (after replacements) to " + prunedTranscriptsFile.getAbsolutePath());
 			}
+		}
+		if (removeExtraSpaces) {
+			checkCharacters.removeExtraSpaces();
 		}
 		if (expandAbbreviations) {
 			if (inplaceReplacements) {
