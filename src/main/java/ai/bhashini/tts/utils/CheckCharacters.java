@@ -343,7 +343,7 @@ public class CheckCharacters {
 				"Expand numbers in the transcript files");
 		BooleanOption retainNumbersForValidation = new BooleanOption("retain", "retain-numbers",
 				"Retain original numbers for validation. Original numbers and their expansion will be enclosed in curly brackets.");
-		BooleanOption removeExtraSpaces = new BooleanOption("xSpaces", "remove-extra-spaces",
+		BooleanOption removeExtraSpaces = new BooleanOption("spaces", "remove-extra-spaces",
 				"Replace multiple spaces with a single space in the original transcript files");
 		BooleanOption inplaceReplacements = new BooleanOption("inplace", "inplace-replacements",
 				"Do character replacements in the original transcript files");
