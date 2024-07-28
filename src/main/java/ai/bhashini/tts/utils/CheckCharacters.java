@@ -211,8 +211,6 @@ public class CheckCharacters {
 			String newStr = replacements.get(oldStr);
 			newTxt = newTxt.replaceAll(oldStr, newStr);
 		}
-		// Replace pipe symbol with Devanagari danda
-		newTxt = newTxt.replaceAll("[|]", "।");
 		return newTxt;
 	}
 
