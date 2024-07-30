@@ -424,6 +424,17 @@ public class NumberExpansion {
 		return text;
 	}
 
+	public String putNumbersBeforeExpansionInCurlyBrackets(String text) {
+		char langZero = (char) language.script.digitZero;
+		char langNine = (char) language.script.digitNine;
+		char startLetter = (char) (language.script.unicodeBlockStart);
+		char endLetter = (char) (language.script.unicodeBlockStart + 0x65);
+		String pattern1 = "[" + startLetter + "-" + endLetter + " -]+";
+		String pattern2 = "[" + langZero + "-" + langNine + "0-9,.-]+";
+		text = text.replaceAll("\\{(" + pattern1 + ")\\}\\s*\\{(" + pattern2 + ")\\}", "{$2}{$1}");
+		return text;
+	}
+
 	public void expandNumbersInFile(String inputFilePath, String outputFilePath, boolean retainNumbersForValidation,
 			boolean removeNumbersAndCurlyBrackets) {
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFilePath));
