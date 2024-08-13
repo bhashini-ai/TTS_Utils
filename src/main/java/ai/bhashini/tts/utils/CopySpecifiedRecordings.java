@@ -62,7 +62,7 @@ public class CopySpecifiedRecordings {
 		StringOption dataDir = new StringOption("dir", "data-dir",
 				"Directory containing recordings (<child-dir>/wav/*.wav) and their transcripts (<child-dir>/txt/*.txt)");
 		StringOption tsvFilePath = new StringOption("tsv", "tsv-filepath",
-				"Relative path of TSV file containing sentence-IDs of interest.");
+				"Path of TSV file containing sentence-IDs of interest.");
 		StringOption outputDirName = new StringOption("out", "output-dir-name",
 				"Name of output directory where the specified recordings will be saved (default = '"
 						+ defaultOutputDirName + "')",
@@ -96,7 +96,7 @@ public class CopySpecifiedRecordings {
 		boolean skipCopyingWavFiles = arguments.skipCopyingWavFiles.getBoolValue();
 
 		File dataDir = new File(dataDirPath);
-		File sentenceIdsFile = new File(dataDir, tsvFilePath);
+		File sentenceIdsFile = new File(tsvFilePath);
 		File outputDir = new File(dataDir, outputDirName);
 
 		System.out.println("Parsing sentenceIds in " + sentenceIdsFile.getAbsolutePath());
