@@ -27,20 +27,24 @@ public class CopySpecifiedRecordings {
 	}
 
 	public static void copyTextAndWavFiles(ArrayList<String> sentenceIds, HashMap<String, String> txtFilePaths,
-			HashMap<String, String> wavFilePaths, File outputTxtDir, File outputWavDir, boolean skipCopyingWavFiles) {
+			HashMap<String, String> wavFilePaths, File outputTxtDir, File outputWavDir, boolean skipCopyingWavFiles, boolean verbose) {
 		for (String sentenceId : sentenceIds) {
 			if (txtFilePaths.containsKey(sentenceId) && wavFilePaths.containsKey(sentenceId)) {
 				try {
 					File srcTxtFile = new File(txtFilePaths.get(sentenceId));
 					File dstTxtFile = new File(outputTxtDir, sentenceId + ".txt");
 					Files.copy(srcTxtFile.toPath(), dstTxtFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					System.out.println("Copied " + srcTxtFile + " -> " + dstTxtFile);
+					if (verbose) {
+						System.out.println("Copied " + srcTxtFile + " -> " + dstTxtFile);
+					}
 
 					if (!skipCopyingWavFiles) {
 						File srcWavFile = new File(wavFilePaths.get(sentenceId));
 						File dstWavFile = new File(outputWavDir, sentenceId + ".wav");
 						Files.copy(srcWavFile.toPath(), dstWavFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-						System.out.println("Copied " + srcWavFile + " -> " + dstWavFile);
+						if (verbose) {
+							System.out.println("Copied " + srcWavFile + " -> " + dstWavFile);
+						}
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -68,6 +72,7 @@ public class CopySpecifiedRecordings {
 						+ defaultOutputDirName + "')",
 				defaultOutputDirName);
 		BooleanOption skipCopyingWavFiles = new BooleanOption("sw", "skip-wav", "Skip copying audio files");
+		BooleanOption verbose = new BooleanOption("v", "verbose", "Show path of each file being copied");
 
 		public Arguments() {
 			super();
@@ -77,6 +82,7 @@ public class CopySpecifiedRecordings {
 			options.addOption(tsvFilePath);
 			options.addOption(outputDirName);
 			options.addOption(skipCopyingWavFiles);
+			options.addOption(verbose);
 		}
 	}
 
@@ -94,6 +100,7 @@ public class CopySpecifiedRecordings {
 		String tsvFilePath = arguments.tsvFilePath.getStringValue();
 		String outputDirName = arguments.outputDirName.getStringValue();
 		boolean skipCopyingWavFiles = arguments.skipCopyingWavFiles.getBoolValue();
+		boolean verbose = arguments.verbose.getBoolValue();
 
 		File dataDir = new File(dataDirPath);
 		File sentenceIdsFile = new File(tsvFilePath);
@@ -113,6 +120,8 @@ public class CopySpecifiedRecordings {
 		outputWavDir.mkdirs();
 		System.out.println("# of matching txt files found = " + txtFilePaths.size());
 		System.out.println("# of matching wav files found = " + wavFilePaths.size() + "\n");
-		copyTextAndWavFiles(sentenceIds, txtFilePaths, wavFilePaths, outputTxtDir, outputWavDir, skipCopyingWavFiles);
+		System.out.println("Copying specified recordings...");
+		copyTextAndWavFiles(sentenceIds, txtFilePaths, wavFilePaths, outputTxtDir, outputWavDir, skipCopyingWavFiles, verbose);
+		System.out.println("Copying completed.");
 	}
 }
