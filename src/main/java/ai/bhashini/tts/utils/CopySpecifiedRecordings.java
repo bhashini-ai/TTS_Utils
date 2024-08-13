@@ -27,7 +27,7 @@ public class CopySpecifiedRecordings {
 	}
 
 	public static void copyTextAndWavFiles(ArrayList<String> sentenceIds, HashMap<String, String> txtFilePaths,
-			HashMap<String, String> wavFilePaths, File outputTxtDir, File outputWavDir) {
+			HashMap<String, String> wavFilePaths, File outputTxtDir, File outputWavDir, boolean skipCopyingWavFiles) {
 		for (String sentenceId : sentenceIds) {
 			if (txtFilePaths.containsKey(sentenceId) && wavFilePaths.containsKey(sentenceId)) {
 				try {
@@ -36,10 +36,12 @@ public class CopySpecifiedRecordings {
 					Files.copy(srcTxtFile.toPath(), dstTxtFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					System.out.println("Copied " + srcTxtFile + " -> " + dstTxtFile);
 
-					File srcWavFile = new File(wavFilePaths.get(sentenceId));
-					File dstWavFile = new File(outputWavDir, sentenceId + ".wav");
-					Files.copy(srcWavFile.toPath(), dstWavFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					System.out.println("Copied " + srcWavFile + " -> " + dstWavFile);
+					if (!skipCopyingWavFiles) {
+						File srcWavFile = new File(wavFilePaths.get(sentenceId));
+						File dstWavFile = new File(outputWavDir, sentenceId + ".wav");
+						Files.copy(srcWavFile.toPath(), dstWavFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+						System.out.println("Copied " + srcWavFile + " -> " + dstWavFile);
+					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -65,6 +67,7 @@ public class CopySpecifiedRecordings {
 				"Name of output directory where the specified recordings will be saved (default = '"
 						+ defaultOutputDirName + "')",
 				defaultOutputDirName);
+		BooleanOption skipCopyingWavFiles = new BooleanOption("sw", "skip-wav", "Skip copying audio files");
 
 		public Arguments() {
 			super();
@@ -73,6 +76,7 @@ public class CopySpecifiedRecordings {
 			options.addOption(dataDir);
 			options.addOption(tsvFilePath);
 			options.addOption(outputDirName);
+			options.addOption(skipCopyingWavFiles);
 		}
 	}
 
@@ -89,6 +93,8 @@ public class CopySpecifiedRecordings {
 		String dataDirPath = arguments.dataDir.getStringValue();
 		String tsvFilePath = arguments.tsvFilePath.getStringValue();
 		String outputDirName = arguments.outputDirName.getStringValue();
+		boolean skipCopyingWavFiles = arguments.skipCopyingWavFiles.getBoolValue();
+
 		File dataDir = new File(dataDirPath);
 		File sentenceIdsFile = new File(dataDir, tsvFilePath);
 		File outputDir = new File(dataDir, outputDirName);
@@ -107,6 +113,6 @@ public class CopySpecifiedRecordings {
 		outputWavDir.mkdirs();
 		System.out.println("# of matching txt files found = " + txtFilePaths.size());
 		System.out.println("# of matching wav files found = " + wavFilePaths.size() + "\n");
-		copyTextAndWavFiles(sentenceIds, txtFilePaths, wavFilePaths, outputTxtDir, outputWavDir);
+		copyTextAndWavFiles(sentenceIds, txtFilePaths, wavFilePaths, outputTxtDir, outputWavDir, skipCopyingWavFiles);
 	}
 }
