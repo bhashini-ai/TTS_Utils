@@ -27,7 +27,7 @@ public enum Language {
 	Sindhi_Arabic(Script.Urdu, "snd", "sd"),
 	Dogri(Script.Devanagari, "doi", "doi"), // https://en.wikipedia.org/wiki/Dogri_language
 	Konkani(Script.Devanagari, "kok", "kok", "gom_Deva"), // https://en.wikipedia.org/wiki/Konkani_language
-	Manipuri_Meitei(Script.Meitei, "mni", "mni"), // https://en.wikipedia.org/wiki/Meitei_language
+	Manipuri(Script.Meitei, "mni", "mni"), // https://en.wikipedia.org/wiki/Meitei_language
 	Manipuri_Bengali(Script.Bengali, "mni", "mnib"),
 	Bodo(Script.Devanagari, "brx", "brx"), // https://en.wikipedia.org/wiki/Boro_language_(India)
 	Sanskrit(Script.Devanagari, "san", "sa");
