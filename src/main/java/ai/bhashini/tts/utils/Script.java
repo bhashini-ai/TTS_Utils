@@ -11,7 +11,8 @@ public enum Script {
 	Kannada(0x0C80, "Knda"),
 	Malayalam(0x0D00, "Mlym"),
 	English(0x0000, 0x007F, 0x0030, 0x0039, "Latn"),
-	Urdu(0x0600, 0x06FF, 0x06F0, 0x06F9, "Arab");
+	Urdu(0x0600, 0x06FF, 0x06F0, 0x06F9, "Arab"),
+	Meitei(0xABC0, 0xABFF, 0xABF0, 0xABF9, "Mtei");
 
 	public final int unicodeBlockStart;
 	public final int unicodeBlockEnd;

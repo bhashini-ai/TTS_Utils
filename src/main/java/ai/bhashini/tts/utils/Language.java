@@ -20,12 +20,15 @@ public enum Language {
 	Maithili(Script.Devanagari, "mai", "mai"), // https://en.wikipedia.org/wiki/Maithili_language
 	Magahi(Script.Devanagari, "mag", "mag"), // https://en.wikipedia.org/wiki/Magahi_language
 	Santali(Script.Devanagari, "sat", "sat"), // https://en.wikipedia.org/wiki/Santali_language
-	Kashmiri(Script.Devanagari, "kas", "ks"),
+	Kashmiri(Script.Devanagari, "kas", "ksd"),
+	Kashmiri_Arabic(Script.Urdu, "kas", "ks"),
 	Nepali(Script.Devanagari, "nep", "ne", "npi_Deva"),
-	Sindhi(Script.Devanagari, "snd", "sd"),
+	Sindhi(Script.Devanagari, "snd", "sdd"),
+	Sindhi_Arabic(Script.Urdu, "snd", "sd"),
 	Dogri(Script.Devanagari, "doi", "doi"), // https://en.wikipedia.org/wiki/Dogri_language
 	Konkani(Script.Devanagari, "kok", "kok", "gom_Deva"), // https://en.wikipedia.org/wiki/Konkani_language
-	Manipuri(Script.Bengali, "mni", "mni"), // https://en.wikipedia.org/wiki/Meitei_language
+	Manipuri_Meitei(Script.Meitei, "mni", "mni"), // https://en.wikipedia.org/wiki/Meitei_language
+	Manipuri_Bengali(Script.Bengali, "mni", "mnib"),
 	Bodo(Script.Devanagari, "brx", "brx"), // https://en.wikipedia.org/wiki/Boro_language_(India)
 	Sanskrit(Script.Devanagari, "san", "sa");
 
