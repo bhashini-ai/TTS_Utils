@@ -80,4 +80,9 @@ public enum Language {
 			return null;
 		}
 	}
+
+	@Override
+	public String toString() {
+		return getNativeAndEnglishName();
+	}
 }
