@@ -2,50 +2,78 @@ package ai.bhashini.tts.utils;
 
 public enum Language {
 	// https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
-	English(Script.English, "eng", "en"),
-	Hindi(Script.Devanagari, "hin", "hi"),
-	Bengali(Script.Bengali, "ben", "bn"),
-	Marathi(Script.Devanagari, "mar", "mr"),
-	Telugu(Script.Telugu, "tel", "te"),
-	Tamil(Script.Tamil, "tam", "ta"),
-	Gujarati(Script.Gujarati, "guj", "gu"),
-	Urdu(Script.Urdu, "urd", "ur"),
-	Bhojpuri(Script.Devanagari, "bho", "bho"), // https://en.wikipedia.org/wiki/Bhojpuri_language
-	Kannada(Script.Kannada, "kan", "kn"),
-	Odia(Script.Odia, "ori", "or", "ory_Orya"),
-	Malayalam(Script.Malayalam, "mal", "ml"),
-	Punjabi(Script.Gurmukhi, "pan", "pa"),
-	Chhattisgarhi(Script.Devanagari, "hne", "hne"), // https://en.wikipedia.org/wiki/Chhattisgarhi_language
-	Assamese(Script.Bengali, "asm", "as"),
-	Maithili(Script.Devanagari, "mai", "mai"), // https://en.wikipedia.org/wiki/Maithili_language
-	Magahi(Script.Devanagari, "mag", "mag"), // https://en.wikipedia.org/wiki/Magahi_language
-	Santali(Script.Devanagari, "sat", "sat"), // https://en.wikipedia.org/wiki/Santali_language
-	Kashmiri(Script.Devanagari, "kas", "ksd"),
-	Kashmiri_Arabic(Script.Urdu, "kas", "ks"),
-	Nepali(Script.Devanagari, "nep", "ne", "npi_Deva"),
-	Sindhi(Script.Devanagari, "snd", "sdd"),
-	Sindhi_Arabic(Script.Urdu, "snd", "sd"),
-	Dogri(Script.Devanagari, "doi", "doi"), // https://en.wikipedia.org/wiki/Dogri_language
-	Konkani(Script.Devanagari, "kok", "kok", "gom_Deva"), // https://en.wikipedia.org/wiki/Konkani_language
-	Manipuri(Script.Meitei, "mni", "mni"), // https://en.wikipedia.org/wiki/Meitei_language
-	Manipuri_Bengali(Script.Bengali, "mni", "mnib"),
-	Bodo(Script.Devanagari, "brx", "brx"), // https://en.wikipedia.org/wiki/Boro_language_(India)
-	Sanskrit(Script.Devanagari, "san", "sa");
+	English(Script.English, "eng", "en", ""),
+	Hindi(Script.Devanagari, "hin", "hi", "हिंदी"),
+	Bengali(Script.Bengali, "ben", "bn", "বাংলা"),
+	Marathi(Script.Devanagari, "mar", "mr", "मराठी"),
+	Telugu(Script.Telugu, "tel", "te", "తెలుగు"),
+	Tamil(Script.Tamil, "tam", "ta", "தமிழ்"),
+	Gujarati(Script.Gujarati, "guj", "gu", "ગુજરાતી"),
+	Urdu(Script.Urdu, "urd", "ur", "اردو"),
+	Bhojpuri(Script.Devanagari, "bho", "bho", "भोजपुरी"), // https://en.wikipedia.org/wiki/Bhojpuri_language
+	Kannada(Script.Kannada, "kan", "kn", "ಕನ್ನಡ"),
+	Odia(Script.Odia, "ori", "or", "ଓଡିଆ", "ory_Orya"),
+	Malayalam(Script.Malayalam, "mal", "ml", "മലയാളം"),
+	Punjabi(Script.Gurmukhi, "pan", "pa", "ਪੰਜਾਬੀ"),
+	Chhattisgarhi(Script.Devanagari, "hne", "hne", "छत्तीसगढ़ी"), // https://en.wikipedia.org/wiki/Chhattisgarhi_language
+	Assamese(Script.Bengali, "asm", "as", "অসমীয়া"),
+	Maithili(Script.Devanagari, "mai", "mai", "मैथिली"), // https://en.wikipedia.org/wiki/Maithili_language
+	Magahi(Script.Devanagari, "mag", "mag", "मगही"), // https://en.wikipedia.org/wiki/Magahi_language
+	Santali(Script.OlChiki, "sat", "sat", "ᱥᱟᱱᱛᱟᱲᱤ"), // https://en.wikipedia.org/wiki/Santali_language
+	Kashmiri(Script.Devanagari, "kas", "ksd", "कॉशुर"),
+	Kashmiri_Arabic(Script.Urdu, "kas", "ks", "کٲشُر"),
+	Nepali(Script.Devanagari, "nep", "ne", "नेपाली", "npi_Deva"),
+	Sindhi(Script.Devanagari, "snd", "sdd", "सिन्धी"),
+	Sindhi_Arabic(Script.Urdu, "snd", "sd", "سِنڌِي‎"),
+	Dogri(Script.Devanagari, "doi", "doi", "डोगरी"), // https://en.wikipedia.org/wiki/Dogri_language
+	Konkani(Script.Devanagari, "kok", "kok", "कोंकणी", "gom_Deva"), // https://en.wikipedia.org/wiki/Konkani_language
+	Manipuri(Script.Meitei, "mni", "mni", "ꯃꯩꯇꯩꯂꯣꯟ"), // https://en.wikipedia.org/wiki/Meitei_language
+	Manipuri_Bengali(Script.Bengali, "mni", "mnib", "মৈতৈলোন্"),
+	Bodo(Script.Devanagari, "brx", "brx", "बड़ो"), // https://en.wikipedia.org/wiki/Boro_language_(India)
+	Sanskrit(Script.Devanagari, "san", "sa", "संस्कृतम्");
 
-	private Language(Script script, String threeLetterCode, String twoLetterCode, String bcp47Tag) {
+	private Language(Script script, String threeLetterCode, String twoLetterCode, String nativeText, String bcp47Tag) {
 		this.script = script;
 		this.threeLetterCode = threeLetterCode;
 		this.twoLetterCode = twoLetterCode;
+		this.nativeText = nativeText;
 		this.bcp47Tag = bcp47Tag;
 	}
 
-	private Language(Script script, String threeLetterCode, String twoLetterCode) {
-		this(script, threeLetterCode, twoLetterCode, threeLetterCode + "_" + script.fourLetterCode);
+	private Language(Script script, String threeLetterCode, String twoLetterCode, String nativeText) {
+		this(script, threeLetterCode, twoLetterCode, nativeText, threeLetterCode + "_" + script.fourLetterCode);
 	}
 
 	public final Script script;
 	public final String threeLetterCode;
 	public final String twoLetterCode;
+	public final String nativeText;
 	public final String bcp47Tag;
 
+	public String getNativeAndEnglishName() {
+		if (this == English) {
+			return name();
+		}
+		return nativeText + "(" + name() + ")";
+	}
+
+	public static Language fromNativeAndEnglishName(String combinedName) {
+		if (combinedName == null || combinedName.isBlank()) {
+			return null;
+		}
+		combinedName = combinedName.trim();
+		if (combinedName.equalsIgnoreCase("English")) {
+			return English;
+		}
+		int start = combinedName.indexOf('(');
+		int end = combinedName.indexOf(')');
+		if (start > -1 && end > -1) {
+			try {
+				return Language.valueOf(combinedName.substring(start + 1, end).trim());
+			} catch (IllegalArgumentException e) {
+				return null;
+			}
+		}
+		return null;
+	}
 }
