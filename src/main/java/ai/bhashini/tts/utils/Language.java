@@ -68,12 +68,16 @@ public enum Language {
 		int start = combinedName.indexOf('(');
 		int end = combinedName.indexOf(')');
 		if (start > -1 && end > -1) {
-			try {
-				return Language.valueOf(combinedName.substring(start + 1, end).trim());
-			} catch (IllegalArgumentException e) {
-				return null;
-			}
+			return fromName(combinedName.substring(start + 1, end).trim());
 		}
 		return null;
+	}
+
+	public static Language fromName(String name) {
+		try {
+			return Language.valueOf(name);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 }
