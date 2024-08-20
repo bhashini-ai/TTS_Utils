@@ -48,7 +48,7 @@ public class NumberExpansion {
 		this.commaPattern2 = Pattern.compile(COMMA_REGEX2);
 		this.commaPattern3 = Pattern.compile(COMMA_REGEX3);
 		this.commaPattern4 = Pattern.compile(COMMA_REGEX4);
-		loadNumberExpansionProperties(language + "_NumberExpansion.properties");
+		loadNumberExpansionProperties(language.name() + "_NumberExpansion.properties");
 		anusvara = Character.valueOf((char) (language.script.unicodeBlockStart + 0x02)).toString();
 	}
 
@@ -66,7 +66,8 @@ public class NumberExpansion {
 		try {
 			InputStream is = getClass().getResourceAsStream("/" + numberExpansionPropertiesFile);
 			numberExpansionProperties.load(new InputStreamReader(is, "UTF-8"));
-		} catch (IOException e) {
+		} catch (Exception e) {
+			System.err.println("Couldn't load " + numberExpansionPropertiesFile);
 			e.printStackTrace();
 		}
 	}

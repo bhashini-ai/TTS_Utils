@@ -24,7 +24,7 @@ public class AbbreviationExpansion {
 	// Singleton class => private constructor
 	private AbbreviationExpansion(Language language) {
 		this.language = language;
-		loadPatternsAndReplacements(language + "_AbbreviationExpansion.properties");
+		loadPatternsAndReplacements(language.name() + "_AbbreviationExpansion.properties");
 		createPatternsMap();
 	}
 
