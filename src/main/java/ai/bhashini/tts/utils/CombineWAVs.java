@@ -27,6 +27,9 @@ public class CombineWAVs {
     }
 
     public static File combine(ArrayList<File> files, int gapToBeInsertedInMilliSecs) {
+		if (files.size() == 0) {
+			return null;
+		}
         if (files.size() == 1) {
             return files.get(0);
         }
