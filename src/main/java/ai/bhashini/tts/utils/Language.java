@@ -54,7 +54,7 @@ public enum Language {
 		if (this == English) {
 			return name();
 		}
-		return nativeText + "(" + name() + ")";
+		return name() + " (" + nativeText + ")";
 	}
 
 	public static Language fromNativeAndEnglishName(String combinedName) {
