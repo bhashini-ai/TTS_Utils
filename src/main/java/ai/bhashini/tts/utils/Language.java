@@ -81,6 +81,15 @@ public enum Language {
 		}
 	}
 
+	public static Language fromThreeLetterCode(String threeLetterCode) {
+		for (Language language : Language.values()) {
+			if (language.threeLetterCode.equals(threeLetterCode)) {
+				return language;
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public String toString() {
 		return getNativeAndEnglishName();
