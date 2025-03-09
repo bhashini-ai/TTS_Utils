@@ -90,6 +90,15 @@ public enum Language {
 		return null;
 	}
 
+	public static Language fromTwoLetterCode(String twoLetterCode) {
+		for (Language language : Language.values()) {
+			if (language.twoLetterCode.equals(twoLetterCode)) {
+				return language;
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public String toString() {
 		return getNativeAndEnglishName();
