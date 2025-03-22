@@ -30,7 +30,8 @@ public enum Language {
 	Manipuri(Script.Meitei, "mni", "mni", "ꯃꯩꯇꯩꯂꯣꯟ"), // https://en.wikipedia.org/wiki/Meitei_language
 	Manipuri_Bengali(Script.Bengali, "mni", "mnib", "মৈতৈলোন্"),
 	Bodo(Script.Devanagari, "brx", "brx", "बड़ो"), // https://en.wikipedia.org/wiki/Boro_language_(India)
-	Sanskrit(Script.Devanagari, "san", "sa", "संस्कृतम्");
+	Sanskrit(Script.Devanagari, "san", "sa", "संस्कृतम्"),
+	Auto(Script.English, "auto", "auto", "Detect"); // Placeholder for auto-detection of language during OCR
 
 	private Language(Script script, String threeLetterCode, String twoLetterCode, String nativeText, String bcp47Tag) {
 		this.script = script;
