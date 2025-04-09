@@ -54,7 +54,7 @@ public class CreateScriptCsvForAI4Bharat {
 		public static String getHeader() {
 			return FieldOfInterest.ID + "," + FieldOfInterest.Sentence + ","
 					+ FieldOfInterest.Language.toString().toLowerCase() + ","
-					+ FieldOfInterest.Speaker.toString().toString() + ","
+					+ FieldOfInterest.Speaker.toString().toLowerCase() + ","
 					+ FieldOfInterest.Style.toString().toLowerCase() + ","
 					+ FieldOfInterest.Category.toString().toLowerCase();
 		}
