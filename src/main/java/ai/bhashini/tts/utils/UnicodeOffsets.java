@@ -57,7 +57,7 @@ public enum UnicodeOffsets {
     AI_LENGTH_MARK(0x56),
     AU_LENGTH_MARK(0x57);
 
-	final int offset;
+	public final int offset;
 
 	private UnicodeOffsets(int offset) {
 		this.offset = offset;
@@ -78,7 +78,7 @@ public enum UnicodeOffsets {
 
 	public static boolean isVowel(int offset) {
 		if ((offset >= LETTER_SHORT_A.offset && offset <= LETTER_AU.offset) || offset == LETTER_VOCALIC_RR.offset
-				|| offset == LETTER_VOCALIC_RR.offset) {
+				|| offset == LETTER_VOCALIC_RR.offset || offset == SIGN_ANUSVARA.offset) {
 			return true;
 		}
 		return false;
@@ -112,6 +112,9 @@ public enum UnicodeOffsets {
 		case LETTER_UU:
 			vowelSign = VOWEL_SIGN_UU;
 			break;
+		case LETTER_CHANDRA_E:
+			vowelSign = VOWEL_SIGN_CHANDRA_E;
+			break;
 		case LETTER_E:
 			vowelSign = VOWEL_SIGN_E;
 			break;
@@ -120,6 +123,9 @@ public enum UnicodeOffsets {
 			break;
 		case LETTER_AI:
 			vowelSign = VOWEL_SIGN_AI;
+			break;
+		case LETTER_CHANDRA_O:
+			vowelSign = VOWEL_SIGN_CHANDRA_O;
 			break;
 		case LETTER_O:
 			vowelSign = VOWEL_SIGN_O;
