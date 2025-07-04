@@ -13,6 +13,7 @@ import java.util.HashMap;
 
 public class Transliterate {
 	protected HashMap<String, String> transliterationMappings = new HashMap<>();
+	protected HashMap<String, String> arpabetDevanagariMappings = new HashMap<>();
 
 	private static Transliterate uniqueInstance = null;
 
@@ -24,9 +25,11 @@ public class Transliterate {
 	}
 
 	protected static String TRANSLITERATION_MAPPINGS_FILE = "TransliterationMappings.tsv";
+	protected static String ARPABET_DEVANAGARI_MAPPINGS_FILE = "ArpabetDevanagariMappings.tsv";
 
 	private Transliterate() {
 		loadTransliterationMappings(TRANSLITERATION_MAPPINGS_FILE);
+		loadArpabetDevanagariMappings(ARPABET_DEVANAGARI_MAPPINGS_FILE);
 	}
 
 	protected void loadTransliterationMappings(String transliterationMappingsFile) {
@@ -58,9 +61,25 @@ public class Transliterate {
 					}
 				}
 			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	protected void loadArpabetDevanagariMappings(String arpabetDevanagariMappingsFile) {
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+				getClass().getResourceAsStream("/" + arpabetDevanagariMappingsFile), StandardCharsets.UTF_8))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				if (line.startsWith("#")) {
+					continue; // Skip comments
+				}
+				String[] parts = line.split("\t");
+				if (parts.length >= 2) {
+					arpabetDevanagariMappings.put(parts[0], parts[1]);
+				}
+			}
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -111,6 +130,53 @@ public class Transliterate {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static int getUnicodeOffset(char c) {
+		return c - Script.Devanagari.unicodeBlockStart;
+	}
+
+	public static String getUnicode(int offset) {
+		return Character.toString(offset + Script.Devanagari.unicodeBlockStart);
+	}
+
+	public static String convertToVowelSign(int offset) {
+		return getUnicode(UnicodeOffsets.convertToVowelSign(UnicodeOffsets.valueOf(offset)).offset);
+	}
+
+	public String getIndicMapping(String[] arpabets) {
+		StringBuilder strBuilder = new StringBuilder();
+		boolean isPrevSymbolConsonant = false;
+		boolean wordStart = true;
+		for (String arpabet : arpabets) {
+			String indicMapping = arpabetDevanagariMappings.get(arpabet);
+			if (indicMapping == null) {
+				indicMapping = arpabetDevanagariMappings.get(arpabet.substring(0, arpabet.length() - 1));
+			}
+			int offset = getUnicodeOffset(indicMapping.charAt(indicMapping.length() - 1));
+			if (offset == UnicodeOffsets.SIGN_NUKTA.offset) {
+				offset = getUnicodeOffset(indicMapping.charAt(0));
+			}
+			if (UnicodeOffsets.isVowel(offset)) {
+				if (!wordStart) {
+					if (isPrevSymbolConsonant) {
+						indicMapping = convertToVowelSign(offset);
+					}
+				}
+				isPrevSymbolConsonant = false;
+			} else {
+				if (isPrevSymbolConsonant) {
+					indicMapping = getUnicode(UnicodeOffsets.HALANT.offset) + indicMapping;
+				}
+				isPrevSymbolConsonant = true;
+			}
+			strBuilder.append(indicMapping);
+			wordStart = false;
+		}
+		if (isPrevSymbolConsonant) {
+			strBuilder.append(getUnicode(UnicodeOffsets.HALANT.offset));
+		}
+		return strBuilder.toString();
 	}
 
 	public static void main(String[] args) {
