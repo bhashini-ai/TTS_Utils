@@ -37,4 +37,12 @@ public enum Script {
 		return (c >= unicodeBlockStart && c <= unicodeBlockEnd);
 	}
 
+	public int getUnicodeOffset(int c) {
+		return c - unicodeBlockStart;
+	}
+
+	public String getUnicode(int offset) {
+		return Character.toString(offset + unicodeBlockStart);
+	}
+
 }

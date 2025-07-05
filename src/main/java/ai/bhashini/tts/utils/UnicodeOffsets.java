@@ -143,4 +143,7 @@ public enum UnicodeOffsets {
 		return vowelSign;
 	}
 
+	public static int convertToVowelSign(int offset) {
+		return convertToVowelSign(UnicodeOffsets.valueOf(offset)).offset;
+	}
 }

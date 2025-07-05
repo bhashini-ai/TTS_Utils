@@ -132,49 +132,47 @@ public class Transliterate {
 		}
 	}
 
-	public static int getUnicodeOffset(char c) {
-		return c - Script.Devanagari.unicodeBlockStart;
-	}
-
-	public static String getUnicode(int offset) {
-		return Character.toString(offset + Script.Devanagari.unicodeBlockStart);
-	}
-
-	public static String convertToVowelSign(int offset) {
-		return getUnicode(UnicodeOffsets.convertToVowelSign(UnicodeOffsets.valueOf(offset)).offset);
-	}
-
 	public String getIndicMapping(String[] arpabets) {
 		StringBuilder strBuilder = new StringBuilder();
-		boolean isPrevSymbolConsonant = false;
 		boolean wordStart = true;
+		boolean isPrevSymbolConsonant = false;
 		for (String arpabet : arpabets) {
-			String indicMapping = arpabetDevanagariMappings.get(arpabet);
-			if (indicMapping == null) {
-				indicMapping = arpabetDevanagariMappings.get(arpabet.substring(0, arpabet.length() - 1));
-			}
-			int offset = getUnicodeOffset(indicMapping.charAt(indicMapping.length() - 1));
-			if (offset == UnicodeOffsets.SIGN_NUKTA.offset) {
-				offset = getUnicodeOffset(indicMapping.charAt(0));
-			}
-			if (UnicodeOffsets.isVowel(offset)) {
-				if (!wordStart) {
-					if (isPrevSymbolConsonant) {
-						indicMapping = convertToVowelSign(offset);
-					}
-				}
+			if (arpabet.isBlank()) {
+				strBuilder.append(arpabet);
+				wordStart = true;
+				isPrevSymbolConsonant = false;
+			} else if (arpabet.matches("[\\p{Punct}]+")) {
+				strBuilder.append(arpabet);
 				isPrevSymbolConsonant = false;
 			} else {
-				if (isPrevSymbolConsonant) {
-					indicMapping = getUnicode(UnicodeOffsets.HALANT.offset) + indicMapping;
+				if (Character.isDigit(arpabet.codePointAt(arpabet.length() - 1))) {
+					arpabet = arpabet.substring(0, arpabet.length() - 1);
 				}
-				isPrevSymbolConsonant = true;
+				String indicMapping = arpabetDevanagariMappings.get(arpabet);
+				if (indicMapping == null || indicMapping.isBlank()) {
+					continue;
+				}
+				int unicodeOffset = Script.Devanagari.getUnicodeOffset(indicMapping.codePointAt(indicMapping.length() - 1));
+				if (unicodeOffset == UnicodeOffsets.SIGN_NUKTA.offset) {
+					unicodeOffset = Script.Devanagari.getUnicodeOffset(indicMapping.codePointAt(0));
+				}
+				if (UnicodeOffsets.isVowel(unicodeOffset)) {
+					if (!wordStart && isPrevSymbolConsonant) {
+						indicMapping = Script.Devanagari.getUnicode(UnicodeOffsets.convertToVowelSign(unicodeOffset));
+					}
+					isPrevSymbolConsonant = false;
+				} else {
+					if (isPrevSymbolConsonant) {
+						indicMapping = Script.Devanagari.getUnicode(UnicodeOffsets.HALANT.offset) + indicMapping;
+					}
+					isPrevSymbolConsonant = true;
+				}
+				strBuilder.append(indicMapping);
+				wordStart = false;
 			}
-			strBuilder.append(indicMapping);
-			wordStart = false;
 		}
 		if (isPrevSymbolConsonant) {
-			strBuilder.append(getUnicode(UnicodeOffsets.HALANT.offset));
+			strBuilder.append(Script.Devanagari.getUnicode(UnicodeOffsets.HALANT.offset));
 		}
 		return strBuilder.toString();
 	}
