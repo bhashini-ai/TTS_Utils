@@ -100,19 +100,24 @@ public class Transliterate {
 		int srcUnicodeStart = inputScript.unicodeBlockStart;
 		int dstUnicodeStart = outputScript.unicodeBlockStart;
 		String outputText = "";
-		for (char c : inputText.toCharArray()) {
-			String mappedString = c + "";
-			if (inputScript.isValidCodepoint(c)) {
-				mappedString = getTransliterationMapping(c + "", outputScript);
-				if (mappedString == null) {
-					char targetC = (char) ((int) c - srcUnicodeStart + dstUnicodeStart);
-					if (!Character.isDefined(targetC)) {
-						targetC = c;
+		for (int i = 0; i < inputText.length(); i++) {
+			int inputC = inputText.codePointAt(i);
+			String inputS = Character.toString(inputC);
+			String outputS;
+			if (inputScript.isValidCodepoint(inputC)) {
+				outputS = getTransliterationMapping(inputS, outputScript);
+				if (outputS == null) {
+					int outputC = inputC - srcUnicodeStart + dstUnicodeStart;
+					if (Character.isDefined(outputC)) {
+						outputS = Character.toString(outputC);
+					} else {
+						outputS = inputS;
 					}
-					mappedString = targetC + "";
 				}
+			} else {
+				outputS = inputS;
 			}
-			outputText += "" + mappedString;
+			outputText += "" + outputS;
 		}
 		return outputText;
 	}
