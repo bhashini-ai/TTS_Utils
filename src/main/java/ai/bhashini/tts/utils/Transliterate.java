@@ -137,18 +137,22 @@ public class Transliterate {
 		}
 	}
 
-	public String getIndicMapping(String[] arpabets) {
+	private static String DEVANAGARI_HALANT = Script.Devanagari.getUnicode(UnicodeOffsets.HALANT.offset);
+
+	public String getDevanagariMapping(String[] arpabets) {
 		StringBuilder strBuilder = new StringBuilder();
 		boolean wordStart = true;
 		boolean isPrevSymbolConsonant = false;
 		for (String arpabet : arpabets) {
-			if (arpabet.isBlank()) {
+			if (arpabet.isBlank() || arpabet.matches("[\\p{Punct}]+")) {
+				if (isPrevSymbolConsonant) {
+					strBuilder.append(DEVANAGARI_HALANT);
+				}
 				strBuilder.append(arpabet);
-				wordStart = true;
 				isPrevSymbolConsonant = false;
-			} else if (arpabet.matches("[\\p{Punct}]+")) {
-				strBuilder.append(arpabet);
-				isPrevSymbolConsonant = false;
+				if (arpabet.isBlank()) {
+					wordStart = true;
+				}
 			} else {
 				if (Character.isDigit(arpabet.codePointAt(arpabet.length() - 1))) {
 					arpabet = arpabet.substring(0, arpabet.length() - 1);
@@ -167,8 +171,8 @@ public class Transliterate {
 					}
 					isPrevSymbolConsonant = false;
 				} else {
-					if (isPrevSymbolConsonant) {
-						indicMapping = Script.Devanagari.getUnicode(UnicodeOffsets.HALANT.offset) + indicMapping;
+					if (isPrevSymbolConsonant && !indicMapping.startsWith(DEVANAGARI_HALANT)) {
+						indicMapping = DEVANAGARI_HALANT + indicMapping;
 					}
 					isPrevSymbolConsonant = true;
 				}
@@ -177,9 +181,9 @@ public class Transliterate {
 			}
 		}
 		if (isPrevSymbolConsonant) {
-			strBuilder.append(Script.Devanagari.getUnicode(UnicodeOffsets.HALANT.offset));
+			strBuilder.append(DEVANAGARI_HALANT);
 		}
-		return strBuilder.toString();
+		return strBuilder.toString().trim();
 	}
 
 	public static void main(String[] args) {
