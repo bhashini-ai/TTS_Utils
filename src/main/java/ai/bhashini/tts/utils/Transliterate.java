@@ -51,13 +51,19 @@ public class Transliterate {
 				}
 				for (int i = 0; i < contents.length; i++) {
 					String inputText = contents[i];
-					for (int j = 0; j < contents.length; j++) {
-						if (i == j) {
-							continue;
+					if (inputText.startsWith("K")) {
+						inputText = inputText.substring(1);
+						for (int j = 0; j < contents.length; j++) {
+							if (i == j) {
+								continue;
+							}
+							Script outputScript = scripts.get(j);
+							String outputText = contents[j];
+							if (outputText.startsWith("K")) {
+								outputText = outputText.substring(1);
+							}
+							putTransliterationMapping(inputText, outputScript, outputText);
 						}
-						Script outputScript = scripts.get(j);
-						String outputText = contents[j];
-						putTransliterationMapping(inputText, outputScript, outputText);
 					}
 				}
 			}
