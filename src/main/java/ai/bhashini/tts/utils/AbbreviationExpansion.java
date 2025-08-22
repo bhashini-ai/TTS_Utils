@@ -54,7 +54,7 @@ public class AbbreviationExpansion {
 		}
 	}
 
-	protected String expandAbbreviations(String text) {
+	public String expandAbbreviations(String text) {
 		String newText = text;
 		for (String key: patternsMap.keySet()) {
 			Pattern pattern = patternsMap.get(key);
