@@ -3,7 +3,24 @@ pipeline {
   stages {
     stage('Maven Build') {
       steps {
-        sh 'docker run --rm -v "$(pwd)":/usr/src/mymaven -v maven-repo:/root/.m2 -w /usr/src/mymaven maven:3.8.6-openjdk-11 sh -c "mvn clean install && chown -R `id -u jenkins`:`id -g jenkins` target"'
+        script {
+          def workDir = pwd()
+          def jenkinsUid = sh(returnStdout: true, script: 'id -u').trim()
+          def jenkinsGid = sh(returnStdout: true, script: 'id -g').trim()
+          // Run Maven inside container as Jenkins user
+          docker.image('maven:3.9.9-ibm-semeru-21-jammy').inside(
+            "-u ${jenkinsUid}:${jenkinsGid} " + // run as jenkins user
+            "-e HOME=/home/jenkins " + // ensure HOME points to user home
+            "-v ${workDir}:/usr/src/mymaven " + // workspace mount
+            "-v /home/jenkins/.m2:/home/jenkins/.m2 " + // persistent Maven repo
+            "-w /usr/src/mymaven" // working directory
+          ) {
+            sh '''
+              unset JAVA_TOOL_OPTIONS # avoid OTEL/agent issues
+              mvn clean install
+            '''
+          }
+        }
       }
     }
 
