@@ -15,10 +15,7 @@ pipeline {
             "-v /home/jenkins/.m2:/home/jenkins/.m2 " + // persistent Maven repo
             "-w /usr/src/mymaven" // working directory
           ) {
-            sh '''
-              unset JAVA_TOOL_OPTIONS # avoid OTEL/agent issues
-              mvn clean install
-            '''
+            sh 'mvn clean install'
           }
         }
       }
