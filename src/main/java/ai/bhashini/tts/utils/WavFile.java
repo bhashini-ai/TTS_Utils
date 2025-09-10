@@ -368,10 +368,10 @@ public class WavFile {
 	}
 
 	// Returns audio data of 1st channel only.
-	public static double[] audioBytesToDouble(byte[] audioBytes, int bytesPerFrame, int bytesPerSample, double floatScale,
-			boolean isBigEndian, int minLength) {
+	public static long[] audioBytesToLong(byte[] audioBytes, int bytesPerFrame, int bytesPerSample,
+			boolean isBigEndian) {
 		int numFrames = audioBytes.length / bytesPerFrame;
-		double[] wavData = new double[Math.max(numFrames, minLength)];
+		long[] audio = new long[numFrames];
 		for (int f = 0; f < numFrames; f++) {
 			// Reference: WavFile.readSample()
 			long val = 0;
@@ -383,9 +383,35 @@ public class WavFile {
 				int shiftBy = isBigEndian ? (bytesPerSample - 1 - b) : b;
 				val += (v << shiftBy * 8);
 			}
-			wavData[f] = (double) val / floatScale;
+			audio[f] = val;
 		}
-		return wavData;
+		return audio;
+	}
+
+	public static double[] audioBytesToDouble(byte[] audioBytes, int bytesPerFrame, int bytesPerSample,
+			boolean isBigEndian, double scale) {
+		long[] audio = audioBytesToLong(audioBytes, bytesPerFrame, bytesPerSample, isBigEndian);
+		return scaleAudio(audio, scale);
+	}
+
+	public static double[] scaleAudio(long[] audio, double scale) {
+		double[] scaledAudio = new double[audio.length];
+		for (int f = 0; f < audio.length; f++) {
+			scaledAudio[f] = audio[f] / scale;
+		}
+		return scaledAudio;
+	}
+
+	public static float[] scaleAudio(long[] audio, float scale) {
+		float[] scaledAudio = new float[audio.length];
+		for (int f = 0; f < audio.length; f++) {
+			scaledAudio[f] = audio[f] / scale;
+		}
+		return scaledAudio;
+	}
+
+	public static double getQuantizationMax(int bitsPerSample) {
+		return 1 << (bitsPerSample - 1);
 	}
 
 	// Integer

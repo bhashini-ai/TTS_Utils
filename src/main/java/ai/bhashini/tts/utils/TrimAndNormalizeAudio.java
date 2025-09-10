@@ -3,6 +3,7 @@ package ai.bhashini.tts.utils;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -104,24 +105,33 @@ public class TrimAndNormalizeAudio {
 			int newBitsPerSample, int windowLength, int hopLength, int cutoffDB, int silencePadding,
 			boolean skipTrimming, boolean skipNormalization) {
 		try {
-			double[] wavData = getResampledWavData(inputWavFilePath, newSamplingRate, newBitsPerSample);
-			normalize(wavData, skipNormalization, newBitsPerSample);
+			long[] audio = getResampledAudioData(inputWavFilePath, newSamplingRate, newBitsPerSample);
+			double[] normalizedAudio = skipNormalization ? inverseQuantize(audio, newBitsPerSample)
+					: normalizeAudioToDouble(audio);
 			if (!skipTrimming) {
-				wavData = OverlappingWindow.trimSilences(wavData, windowLength, hopLength, cutoffDB, silencePadding);
+				normalizedAudio = OverlappingWindow.trimSilences(normalizedAudio, windowLength, hopLength, cutoffDB,
+						silencePadding);
 			}
-			saveWavData(outputWavFilePath, wavData, newSamplingRate, newBitsPerSample);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (UnsupportedAudioFileException e) {
-			e.printStackTrace();
-		} catch (WavFileException e) {
+			saveWavData(outputWavFilePath, normalizedAudio, newSamplingRate, newBitsPerSample);
+		} catch (IOException | UnsupportedAudioFileException | WavFileException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static double[] getResampledWavData(String wavFilePath, int newSamplingRate, int newBitsPerSample)
+	public static long[] getResampledAudioData(InputStream inputStream, int newSamplingRate, int newBitsPerSample)
 			throws UnsupportedAudioFileException, IOException {
-		AudioInputStream srcAudioInputStream = AudioSystem.getAudioInputStream(new File(wavFilePath));
+		AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream);
+		return getResampledAudioData(audioInputStream, newSamplingRate, newBitsPerSample);
+	}
+
+	public static long[] getResampledAudioData(String wavFilePath, int newSamplingRate, int newBitsPerSample)
+			throws UnsupportedAudioFileException, IOException {
+		AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(wavFilePath));
+		return getResampledAudioData(audioInputStream, newSamplingRate, newBitsPerSample);
+	}
+
+	public static long[] getResampledAudioData(AudioInputStream srcAudioInputStream, int newSamplingRate,
+			int newBitsPerSample) throws UnsupportedAudioFileException, IOException {
 		AudioFormat newFormat = new AudioFormat(newSamplingRate, newBitsPerSample, 1, true, true);
 		AudioInputStream newAudioInputStream = AudioSystem.getAudioInputStream(newFormat, srcAudioInputStream);
 		ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
@@ -129,23 +139,22 @@ public class TrimAndNormalizeAudio {
 		while (newAudioInputStream.read(buffer) != -1) {
 			dataStream.writeBytes(buffer);
 		}
-		double[] wavData = WavFile.audioBytesToDouble(dataStream.toByteArray(), newFormat.getFrameSize(),
-				newBitsPerSample / 8, 1.0, newFormat.isBigEndian(), 0);
-		return wavData;
+		long[] audio = WavFile.audioBytesToLong(dataStream.toByteArray(), newFormat.getFrameSize(),
+				newBitsPerSample / 8, newFormat.isBigEndian());
+		return audio;
 	}
 
-	public static void normalize(double[] wavData, boolean skipNormalization, int newBitsPerSample) {
-		double mul;
-		if (skipNormalization) {
-			double max = Math.pow(2, newBitsPerSample - 1);
-			mul = 1.0 / max;
-		} else {
-			double max = getAbsMax(wavData);
-			mul = 0.9999 / max;
-		}
-		for (int i = 0; i < wavData.length; i++) {
-			wavData[i] *= mul;
-		}
+	public static float[] normalizeAudio(long[] audio) {
+		return WavFile.scaleAudio(audio, (float) getAbsMax(audio));
+	}
+
+	public static double[] normalizeAudioToDouble(long[] audio) {
+		return WavFile.scaleAudio(audio, (double) getAbsMax(audio));
+	}
+
+	public static double[] inverseQuantize(long[] audio, int bitsPerSample) {
+		double scale = WavFile.getQuantizationMax(bitsPerSample);
+		return WavFile.scaleAudio(audio, scale);
 	}
 
 	public static void saveWavData(String wavFilePath, double[] wavData, int samplingRate, int bitsPerSample)
@@ -157,15 +166,14 @@ public class TrimAndNormalizeAudio {
 		writeWavFile.close();
 	}
 
-	public static double getAbsMax(double[] data) {
-		double max = 0.0;
-		for (double d : data) {
+	public static long getAbsMax(long[] data) {
+		long max = 0;
+		for (long d : data) {
 			d = Math.abs(d);
 			if (d > max) {
 				max = d;
 			}
 		}
-		return max;
+		return max - 1; // Subtract 1 to prevent clipping
 	}
-
 }
