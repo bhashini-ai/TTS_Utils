@@ -65,7 +65,9 @@ public class NumberExpansion {
 		// https://stackoverflow.com/a/30755227 and https://stackoverflow.com/a/17852323
 		try {
 			InputStream is = getClass().getResourceAsStream("/" + numberExpansionPropertiesFile);
-			numberExpansionProperties.load(new InputStreamReader(is, "UTF-8"));
+			if (is != null) {
+				numberExpansionProperties.load(new InputStreamReader(is, "UTF-8"));
+			}
 		} catch (Exception e) {
 			System.err.println("Couldn't load " + numberExpansionPropertiesFile);
 			e.printStackTrace();

@@ -41,7 +41,9 @@ public class AbbreviationExpansion {
 		// https://stackoverflow.com/a/30755227 and https://stackoverflow.com/a/17852323
 		try {
 			InputStream is = getClass().getResourceAsStream("/" + abbreviationExpansionPropertiesFile);
-			patternsAndReplacements.load(new InputStreamReader(is, "UTF-8"));
+			if (is != null) {
+				patternsAndReplacements.load(new InputStreamReader(is, "UTF-8"));
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
