@@ -368,8 +368,9 @@ public class WavFile {
 	}
 
 	// Returns audio data of 1st channel only.
-	public static long[] audioBytesToLong(byte[] audioBytes, int bytesPerFrame, int bytesPerSample,
+	public static long[] audioBytesToLong(byte[] audioBytes, int numChannels, int bytesPerSample,
 			boolean isBigEndian) {
+		int bytesPerFrame = bytesPerSample * numChannels;
 		int numFrames = audioBytes.length / bytesPerFrame;
 		long[] audio = new long[numFrames];
 		for (int f = 0; f < numFrames; f++) {
@@ -388,9 +389,9 @@ public class WavFile {
 		return audio;
 	}
 
-	public static double[] audioBytesToDouble(byte[] audioBytes, int bytesPerFrame, int bytesPerSample,
+	public static double[] audioBytesToDouble(byte[] audioBytes, int numChannels, int bytesPerSample,
 			boolean isBigEndian, double scale) {
-		long[] audio = audioBytesToLong(audioBytes, bytesPerFrame, bytesPerSample, isBigEndian);
+		long[] audio = audioBytesToLong(audioBytes, numChannels, bytesPerSample, isBigEndian);
 		return scaleAudio(audio, scale);
 	}
 

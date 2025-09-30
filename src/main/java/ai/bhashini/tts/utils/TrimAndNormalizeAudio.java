@@ -139,7 +139,7 @@ public class TrimAndNormalizeAudio {
 		while (newAudioInputStream.read(buffer) != -1) {
 			dataStream.writeBytes(buffer);
 		}
-		long[] audio = WavFile.audioBytesToLong(dataStream.toByteArray(), newFormat.getFrameSize(),
+		long[] audio = WavFile.audioBytesToLong(dataStream.toByteArray(), newFormat.getChannels(),
 				newBitsPerSample / 8, newFormat.isBigEndian());
 		return audio;
 	}
