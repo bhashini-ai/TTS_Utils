@@ -166,6 +166,15 @@ public class TrimAndNormalizeAudio {
 		writeWavFile.close();
 	}
 
+	public static void saveWavData(String wavFilePath, float[] wavData, int samplingRate, int bitsPerSample)
+			throws IOException, WavFileException {
+		new File(wavFilePath).getParentFile().mkdirs();
+		WavFile writeWavFile = WavFile.newWavFile(new File(wavFilePath), 1, wavData.length, bitsPerSample,
+				samplingRate);
+		writeWavFile.writeFrames(wavData, 0, wavData.length);
+		writeWavFile.close();
+	}
+
 	public static long getAbsMax(long[] data) {
 		long max = 0;
 		for (long d : data) {

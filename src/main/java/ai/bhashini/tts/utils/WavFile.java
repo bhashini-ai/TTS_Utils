@@ -673,6 +673,26 @@ public class WavFile {
 		return numFramesToWrite;
 	}
 
+	public int writeFrames(float[] sampleBuffer, int offset, int numFramesToWrite)
+			throws IOException, WavFileException {
+		if (ioState != IOState.WRITING)
+			throw new IOException("Cannot write to WavFile instance");
+
+		for (int f = 0; f < numFramesToWrite; f++) {
+			if (frameCounter == numFrames)
+				return f;
+
+			for (int c = 0; c < numChannels; c++) {
+				writeSample((long) (floatScale * (floatOffset + sampleBuffer[offset])));
+				offset++;
+			}
+
+			frameCounter++;
+		}
+
+		return numFramesToWrite;
+	}
+
 	public int writeFrames(double[][] sampleBuffer, int numFramesToWrite) throws IOException, WavFileException {
 		return writeFrames(sampleBuffer, 0, numFramesToWrite);
 	}
