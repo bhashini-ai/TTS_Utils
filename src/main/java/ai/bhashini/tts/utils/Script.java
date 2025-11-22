@@ -37,6 +37,10 @@ public enum Script {
 		return (c >= unicodeBlockStart && c <= unicodeBlockEnd);
 	}
 
+	public boolean isNumber(int c) {
+		return (c >= digitZero && c <= digitNine);
+	}
+
 	public int getUnicodeOffset(int c) {
 		return c - unicodeBlockStart;
 	}

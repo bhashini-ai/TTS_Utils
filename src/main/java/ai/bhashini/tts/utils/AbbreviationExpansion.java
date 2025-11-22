@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import org.apache.commons.cli.ParseException;
@@ -28,13 +29,10 @@ public class AbbreviationExpansion {
 		createPatternsMap();
 	}
 
-	private static HashMap<Language, AbbreviationExpansion> uniqueInstancesMap = new HashMap<>();
+	private static ConcurrentHashMap<Language, AbbreviationExpansion> uniqueInstancesMap = new ConcurrentHashMap<>();
 
 	public static AbbreviationExpansion getInstance(Language language) {
-		if (!uniqueInstancesMap.containsKey(language)) {
-			uniqueInstancesMap.put(language, new AbbreviationExpansion(language));
-		}
-		return uniqueInstancesMap.get(language);
+		return uniqueInstancesMap.computeIfAbsent(language, AbbreviationExpansion::new);
 	}
 
 	protected void loadPatternsAndReplacements(String abbreviationExpansionPropertiesFile) {

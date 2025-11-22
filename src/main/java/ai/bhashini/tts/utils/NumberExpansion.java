@@ -7,8 +7,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,13 +53,11 @@ public class NumberExpansion {
 		anusvara = Character.valueOf((char) (language.script.unicodeBlockStart + 0x02)).toString();
 	}
 
-	private static HashMap<Language, NumberExpansion> uniqueInstancesMap = new HashMap<>();
+    // Thread-safe map
+	private static ConcurrentHashMap<Language, NumberExpansion> uniqueInstancesMap = new ConcurrentHashMap<>();
 
 	public static NumberExpansion getInstance(Language language) {
-		if (!uniqueInstancesMap.containsKey(language)) {
-			uniqueInstancesMap.put(language, new NumberExpansion(language));
-		}
-		return uniqueInstancesMap.get(language);
+		return uniqueInstancesMap.computeIfAbsent(language, NumberExpansion::new);
 	}
 
 	protected void loadNumberExpansionProperties(String numberExpansionPropertiesFile) {
@@ -66,7 +65,7 @@ public class NumberExpansion {
 		try {
 			InputStream is = getClass().getResourceAsStream("/" + numberExpansionPropertiesFile);
 			if (is != null) {
-				numberExpansionProperties.load(new InputStreamReader(is, "UTF-8"));
+				numberExpansionProperties.load(new InputStreamReader(is, StandardCharsets.UTF_8));
 			}
 		} catch (Exception e) {
 			System.err.println("Couldn't load " + numberExpansionPropertiesFile);
