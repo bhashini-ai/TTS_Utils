@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -41,8 +42,12 @@ public class SentenceSplitter {
 
 	protected void loadInitialsAndAcronyms(String initialsAcronymsFile) {
 		initialsAndAcronyms = new HashSet<>();
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(
-				getClass().getResourceAsStream("/" + initialsAcronymsFile), StandardCharsets.UTF_8))) {
+		InputStream is = getClass().getResourceAsStream("/" + initialsAcronymsFile);
+		if (is == null) {
+			System.out.println("Couldn't find " + initialsAcronymsFile);
+			return;
+		}
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
 			String line;
 			while ((line = br.readLine()) != null) {
 				String[] contents = line.split("\t");
@@ -50,7 +55,8 @@ public class SentenceSplitter {
 					initialsAndAcronyms.add(content);
 				}
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
+			System.out.println("Error loading " + initialsAcronymsFile);
 			e.printStackTrace();
 		}
 	}
