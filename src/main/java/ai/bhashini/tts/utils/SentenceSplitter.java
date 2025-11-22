@@ -29,7 +29,7 @@ public class SentenceSplitter {
 	// Singleton class => private constructor
 	private SentenceSplitter(Script script) {
 		this.script = script;
-		loadInitialsAndAcronyms(script.name() + "_InitialsAcronyms.properties");
+		loadInitialsAndAcronyms(script.name() + "_InitialsAcronyms.tsv");
 		compileNumberedListsRegexPattern();
 	}
 
