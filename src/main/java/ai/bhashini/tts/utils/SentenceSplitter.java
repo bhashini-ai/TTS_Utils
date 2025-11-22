@@ -77,7 +77,7 @@ public class SentenceSplitter {
 	}
 
 	public static class Paragraph {
-		ArrayList<String> sentences;
+		public ArrayList<String> sentences;
 
 		public Paragraph(ArrayList<String> sentences) {
 			this.sentences = sentences;
