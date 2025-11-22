@@ -1,6 +1,8 @@
 package ai.bhashini.tts.utils;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -9,9 +11,15 @@ import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+import org.apache.commons.cli.ParseException;
+
 import ai.bhashini.tts.utils.UnicodeOffsets.UnicodeNormalization;
 
 public class SentenceSplitter {
+	public static final Script[] SUPPORTED_SCRIPTS = { Script.Devanagari, Script.Bengali, Script.Tamil, Script.Telugu,
+			Script.Kannada, Script.Malayalam };
+	public static int MAX_UNICODES_IN_SENTENCE = 250;
+
 	public static final int ZWNJ = 0x200C;
 
 	private Script script;
@@ -68,6 +76,10 @@ public class SentenceSplitter {
 		public Paragraph(ArrayList<String> sentences) {
 			this.sentences = sentences;
 		}
+	}
+
+	public static ArrayList<Paragraph> normalizeAndSplit(Language language, String text) {
+		return normalizeAndSplit(language, text, MAX_UNICODES_IN_SENTENCE);
 	}
 
 	public static ArrayList<Paragraph> normalizeAndSplit(Language language, String text, int maxUnicodesInSentence) {
@@ -215,4 +227,71 @@ public class SentenceSplitter {
 		return end;
 	}
 
+	public void splitTextInFile(String inputFilePath, String outputFilePath) {
+		String fileContents = FileUtils.getFileContents(inputFilePath);
+		ArrayList<Paragraph> splitText = splitText(fileContents, MAX_UNICODES_IN_SENTENCE);
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
+			for (Paragraph p : splitText) {
+				for (String s : p.sentences) {
+					bw.write(s + "\n");
+				}
+				bw.write("\n");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static class Arguments extends CommandLineOptions {
+		StringOption inputFilePath = new StringOption("in", "input", "Path of input text file.");
+		StringOption outputFilePath = new StringOption("out", "output",
+				"Path of output text file. If this is not specified, the output will be saved in the same directpory as that of the input with '_split' added to the filename.");
+		StringOption script = new StringOption("scr", "script", "Script of the input text file");
+
+		public Arguments() {
+			super();
+			inputFilePath.setRequired(true);
+			script.setRequired(true);
+			options.addOption(inputFilePath);
+			options.addOption(outputFilePath);
+			options.addOption(script);
+		}
+	}
+
+	public static void main(String[] args) {
+		Arguments arguments = new Arguments();
+		try {
+			arguments.parse(args);
+			arguments.printValues();
+		} catch (ParseException e) {
+			e.printStackTrace();
+			arguments.printHelp(SentenceSplitter.class.getCanonicalName());
+			return;
+		}
+		String inputFilePath = arguments.inputFilePath.getStringValue();
+		String scriptStr = arguments.script.getStringValue();
+		String outputFilePath = arguments.outputFilePath.getStringValue();
+
+		Script script;
+		try {
+			script = Script.valueOf(scriptStr);
+		} catch (IllegalArgumentException e) {
+			System.out.println("Unrecognized script name. Supported scripts are:");
+			for (Script s : SUPPORTED_SCRIPTS) {
+				System.out.println("\t" + s);
+			}
+			arguments.printHelp(SentenceSplitter.class.getCanonicalName());
+			return;
+		}
+		SentenceSplitter sentenceSplitter = SentenceSplitter.getInstance(script);
+		if (inputFilePath == null) {
+			return;
+		}
+		if (outputFilePath == null) {
+			outputFilePath = FileUtils.addSuffixToFilePath(inputFilePath, "_split");
+		}
+		System.out.println("Splitting text in " + inputFilePath);
+		sentenceSplitter.splitTextInFile(inputFilePath, outputFilePath);
+		System.out.println("Output saved to " + outputFilePath);
+	}
 }
