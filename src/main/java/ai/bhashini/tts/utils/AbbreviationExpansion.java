@@ -48,9 +48,18 @@ public class AbbreviationExpansion {
 	}
 
 	protected void createPatternsMap() {
-		for (Object key : patternsAndReplacements.keySet()) {
-			Pattern pattern = Pattern.compile((String)key);
-			patternsMap.put((String)key, pattern);
+		for (Object keyObj : patternsAndReplacements.keySet()) {
+			String key = (String) keyObj;
+			Pattern pattern;
+			// Use Unicode-aware character classes so \b and \w treat Kannada (and other Unicode letters)
+			// as word characters/boundaries. Fall back to plain compilation if the flag isn't supported.
+			try {
+				pattern = Pattern.compile(key, Pattern.UNICODE_CHARACTER_CLASS);
+			} catch (Exception e) {
+				// Fallback: compile without the Unicode flag
+				pattern = Pattern.compile(key);
+			}
+			patternsMap.put(key, pattern);
 		}
 	}
 
