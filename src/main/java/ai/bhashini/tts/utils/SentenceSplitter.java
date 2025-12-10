@@ -89,8 +89,21 @@ public class SentenceSplitter {
 		return normalizeAndSplit(language, text, MAX_UNICODES_IN_SENTENCE);
 	}
 
+	public static String removeSquareBrackets(String text) {
+		// Replace "[123]" or "[12, 34]" with "123," or "12, 34," (retain inner numbers/text, remove '[' and replace ']' with ',')
+		// Use \p{Nd} to match Unicode digits (so native digits in other scripts are matched too).
+		String newText = text.replaceAll("\\[\\s*(\\p{Nd}[\\p{Nd},\\-–—\\s]*)\\s*\\]", "$1,");
+		// Collapse multiple commas/spaces introduced by consecutive references or replacements
+		newText = newText.replaceAll(",\\s*,+", ",");
+		newText = newText.replaceAll("\\s+,", ",");
+		newText = newText.replaceAll(",\\s+", ", ");
+		return newText;
+	}
+
 	public static ArrayList<Paragraph> normalizeAndSplit(Language language, String text, int maxUnicodesInSentence) {
-		String expandedText = text = SentenceSplitter.getInstance(language.script).processNumberedLists(text);
+		String expandedText = SentenceSplitter.getInstance(language.script).processNumberedLists(text);
+		expandedText = removeSquareBrackets(expandedText);
+
 		expandedText = UnicodeNormalization.getInstance(language.script).mergeVowelSigns(expandedText);
 		expandedText = AbbreviationExpansion.getInstance(language).expandAbbreviations(expandedText);
 		expandedText = NumberExpansion.getInstance(language).expandNumbers(expandedText, false);
