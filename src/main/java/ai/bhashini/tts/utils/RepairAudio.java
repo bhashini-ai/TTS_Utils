@@ -6,7 +6,7 @@ import java.io.IOException;
 import org.apache.commons.cli.ParseException;
 
 public class RepairAudio {
-	static double SPIKE_FACTOR = 3.0;
+	static double SPIKE_FACTOR = 1.0;
 	static double MIN_SPIKE_PERCENT = 0.05;
 	static double CLIP_PERCENT = 90.0;
 
@@ -134,10 +134,11 @@ public class RepairAudio {
 	}
 
 	/**
-	 * A click artifact is detected when a single sample is strongly negative while
-	 * both neighboring samples are positive.
+	 * A click artifact is detected when a single sample polarity flips sharply
+	 * against both neighboring samples (negative spike in positive context or
+	 * positive spike in negative context).
 	 */
-	public static int  repairNegativeClicks(long[] audio, int numFrames, double spikeFactor, long minSpikeAmplitude) {
+	public static int repairNegativeClicks(long[] audio, int numFrames, double spikeFactor, long minSpikeAmplitude) {
 		if (audio == null || numFrames < 3) {
 			return 0;
 		}
@@ -154,7 +155,9 @@ public class RepairAudio {
 			long curr = audio[i];
 			long next = audio[i + 1];
 
-			if (prev <= 0 || next <= 0 || curr >= 0) {
+			boolean neighborsPositive = prev > 0 && next > 0 && curr < 0;
+			boolean neighborsNegative = prev < 0 && next < 0 && curr > 0;
+			if (!neighborsPositive && !neighborsNegative) {
 				continue;
 			}
 
