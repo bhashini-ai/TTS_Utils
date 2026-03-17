@@ -6,16 +6,13 @@ import java.io.IOException;
 import org.apache.commons.cli.ParseException;
 
 public class RepairAudio {
-	static double SPIKE_FACTOR = 1.0;
-	static double MIN_SPIKE_PERCENT = 0.05;
+	static double MIN_SPIKE_PERCENT = 0.85;
 	static double CLIP_PERCENT = 90.0;
 
 	public static class Arguments extends CommandLineOptions {
 		StringOption inputDir = new StringOption("in", "input-dir",
 				"Input directory from which each .wav file will be repaired");
 		StringOption outputDir = new StringOption("out", "output-dir", "Output directory for repaired .wav files");
-		DoubleOption spikeFactor = new DoubleOption("sf", "spike-factor", SPIKE_FACTOR,
-				"Current sample absolute value must exceed this factor times neighboring average");
 		DoubleOption minSpikePercent = new DoubleOption("mp", "min-spike-percent", MIN_SPIKE_PERCENT,
 				"Minimum absolute spike amplitude as a fraction of quantization max (range 0..1)");
 		DoubleOption clipPercent = new DoubleOption("cp", "clip-percent", CLIP_PERCENT,
@@ -27,7 +24,6 @@ public class RepairAudio {
 			outputDir.setRequired(true);
 			options.addOption(inputDir);
 			options.addOption(outputDir);
-			options.addOption(spikeFactor);
 			options.addOption(minSpikePercent);
 			options.addOption(clipPercent);
 		}
@@ -62,8 +58,7 @@ public class RepairAudio {
 			File inputWavFile = inputWavFiles[i];
 			File outputWavFile = new File(outputDir, inputWavFile.getName());
 			int repairedCount = repair(inputWavFile.getAbsolutePath(), outputWavFile.getAbsolutePath(),
-					arguments.spikeFactor.getDoubleValue(), arguments.minSpikePercent.getDoubleValue(),
-					arguments.clipPercent.getDoubleValue());
+					arguments.minSpikePercent.getDoubleValue(), arguments.clipPercent.getDoubleValue());
 			totalArtifacts += repairedCount;
 			System.out.println(inputWavFile.getName() + ": " + repairedCount);
 		}
@@ -74,12 +69,7 @@ public class RepairAudio {
 		sysTime.tock(true);
 	}
 
-	public static int repair(String inputWavFilePath, String outputWavFilePath) {
-		return repair(inputWavFilePath, outputWavFilePath, SPIKE_FACTOR, MIN_SPIKE_PERCENT, CLIP_PERCENT);
-	}
-
-	public static int repair(String inputWavFilePath, String outputWavFilePath,
-			double spikeFactor, double minSpikePercent, double clipPercent) {
+	public static int repair(String inputWavFilePath, String outputWavFilePath, double minSpikePercent, double clipPercent) {
 		try {
 			AudioData audioData = readWavAudio(inputWavFilePath);
 			double quantizationMax = WavFile.getQuantizationMax(audioData.validBits);
@@ -87,7 +77,7 @@ public class RepairAudio {
 
 			int repairedCount = 0;
 			for (int c = 0; c < audioData.numChannels; c++) {
-				repairedCount += repairNegativeClicks(audioData.samples[c], audioData.numFrames, spikeFactor, minSpikeAmplitude);
+				repairedCount += repairNegativeClicks(audioData.samples[c], audioData.numFrames, minSpikeAmplitude);
 			}
 
 			double[][] normalizedAudio = normalizeAndClip(audioData.samples, audioData.numChannels, audioData.numFrames,
@@ -138,17 +128,10 @@ public class RepairAudio {
 	 * against both neighboring samples (negative spike in positive context or
 	 * positive spike in negative context).
 	 */
-	public static int repairNegativeClicks(long[] audio, int numFrames, double spikeFactor, long minSpikeAmplitude) {
+	public static int repairNegativeClicks(long[] audio, int numFrames, long minSpikeAmplitude) {
 		if (audio == null || numFrames < 3) {
 			return 0;
 		}
-		if (spikeFactor <= 1.0) {
-			spikeFactor = 1.0;
-		}
-		if (minSpikeAmplitude < 1) {
-			minSpikeAmplitude = 1;
-		}
-
 		int repairedCount = 0;
 		for (int i = 1; i < numFrames - 1; i++) {
 			long prev = audio[i - 1];
@@ -167,11 +150,7 @@ public class RepairAudio {
 			}
 
 			double neighborAverage = (Math.abs((double) prev) + Math.abs((double) next)) / 2.0;
-			if (neighborAverage < 1.0) {
-				neighborAverage = 1.0;
-			}
-
-			if (absCurr >= (neighborAverage * spikeFactor)) {
+			if (absCurr > neighborAverage) {
 				audio[i] = Math.round((prev + next) / 2.0);
 				repairedCount++;
 			}
