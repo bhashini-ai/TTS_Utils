@@ -137,7 +137,8 @@ public class FileUtils {
 		File[] wavFiles = wavDir.listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File file) {
-				return file.getName().endsWith(".wav") && !file.getName().startsWith("._");
+				String fileName = file.getName().toLowerCase();
+				return fileName.endsWith(".wav") && !fileName.startsWith("._");
 			}
 		});
 		if (wavFiles != null) {

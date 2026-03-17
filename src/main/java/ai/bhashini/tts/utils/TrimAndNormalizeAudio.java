@@ -149,7 +149,8 @@ public class TrimAndNormalizeAudio {
 	}
 
 	public static double[] normalizeAudioToDouble(long[] audio) {
-		return WavFile.scaleAudio(audio, (double) getAbsMax(audio));
+		// 0.9 to keep headroom
+		return WavFile.scaleAudio(audio, (double) getAbsMax(audio) / 0.9);
 	}
 
 	public static double[] inverseQuantize(long[] audio, int bitsPerSample) {
