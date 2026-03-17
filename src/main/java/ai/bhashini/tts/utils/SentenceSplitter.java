@@ -2,6 +2,7 @@ package ai.bhashini.tts.utils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -88,8 +89,21 @@ public class SentenceSplitter {
 		return normalizeAndSplit(language, text, MAX_UNICODES_IN_SENTENCE);
 	}
 
+	public static String removeSquareBrackets(String text) {
+		// Replace "[123]" or "[12, 34]" with "123," or "12, 34," (retain inner numbers/text, remove '[' and replace ']' with ',')
+		// Use \p{Nd} to match Unicode digits (so native digits in other scripts are matched too).
+		String newText = text.replaceAll("\\[\\s*(\\p{Nd}[\\p{Nd},\\-–—\\s]*)\\s*\\]", "$1,");
+		// Collapse multiple commas/spaces introduced by consecutive references or replacements
+		newText = newText.replaceAll(",\\s*,+", ",");
+		newText = newText.replaceAll("\\s+,", ",");
+		newText = newText.replaceAll(",\\s+", ", ");
+		return newText;
+	}
+
 	public static ArrayList<Paragraph> normalizeAndSplit(Language language, String text, int maxUnicodesInSentence) {
-		String expandedText = text = SentenceSplitter.getInstance(language.script).processNumberedLists(text);
+		String expandedText = SentenceSplitter.getInstance(language.script).processNumberedLists(text);
+		expandedText = removeSquareBrackets(expandedText);
+
 		expandedText = UnicodeNormalization.getInstance(language.script).mergeVowelSigns(expandedText);
 		expandedText = AbbreviationExpansion.getInstance(language).expandAbbreviations(expandedText);
 		expandedText = NumberExpansion.getInstance(language).expandNumbers(expandedText, false);
@@ -233,9 +247,15 @@ public class SentenceSplitter {
 		return end;
 	}
 
-	public void splitTextInFile(String inputFilePath, String outputFilePath) {
+	public static void splitTextInFile(String inputFilePath, String outputFilePath, boolean normalize,
+			Language language, Script script) {
 		String fileContents = FileUtils.getFileContents(inputFilePath);
-		ArrayList<Paragraph> splitText = splitText(fileContents, MAX_UNICODES_IN_SENTENCE);
+		ArrayList<Paragraph> splitText;
+		if (normalize) {
+			splitText = normalizeAndSplit(language, fileContents, MAX_UNICODES_IN_SENTENCE);
+		} else {
+			splitText = SentenceSplitter.getInstance(script).splitText(fileContents, MAX_UNICODES_IN_SENTENCE);
+		}
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
 			for (Paragraph p : splitText) {
 				for (String s : p.sentences) {
@@ -253,14 +273,18 @@ public class SentenceSplitter {
 		StringOption outputFilePath = new StringOption("out", "output",
 				"Path of output text file. If this is not specified, the output will be saved in the same directpory as that of the input with '_split' added to the filename.");
 		StringOption script = new StringOption("scr", "script", "Script of the input text file");
+		StringOption language = new StringOption("lang", "language", "Language of the input text file");
+		BooleanOption normalize = new BooleanOption("nrm", "normalize",
+				"Expand numbers and abbreviations in the input text before splitting into sentences.");
 
 		public Arguments() {
 			super();
 			inputFilePath.setRequired(true);
-			script.setRequired(true);
 			options.addOption(inputFilePath);
 			options.addOption(outputFilePath);
 			options.addOption(script);
+			options.addOption(language);
+			options.addOption(normalize);
 		}
 	}
 
@@ -275,29 +299,52 @@ public class SentenceSplitter {
 			return;
 		}
 		String inputFilePath = arguments.inputFilePath.getStringValue();
+		if (!new File(inputFilePath).exists()) {
+			System.out.println("Input file " + inputFilePath + " doesn't exist.");
+			return;
+		}
 		String scriptStr = arguments.script.getStringValue();
 		String outputFilePath = arguments.outputFilePath.getStringValue();
+		String languageStr = arguments.language.getStringValue();
+		Boolean normalize = arguments.normalize.getBoolValue();
 
-		Script script;
-		try {
-			script = Script.valueOf(scriptStr);
-		} catch (IllegalArgumentException e) {
-			System.out.println("Unrecognized script name. Supported scripts are:");
-			for (Script s : SUPPORTED_SCRIPTS) {
-				System.out.println("\t" + s);
+		Script script = null;
+		if (scriptStr != null) {
+			try {
+				script = Script.valueOf(scriptStr);
+			} catch (IllegalArgumentException e) {
+				System.out.println("Unrecognized script name. Supported scripts are:");
+				for (Script s : SUPPORTED_SCRIPTS) {
+					System.out.println("\t" + s);
+				}
+				arguments.printHelp(SentenceSplitter.class.getCanonicalName());
+				return;
 			}
+		}
+		Language language = null;
+		if (languageStr != null) {
+			language = Language.fromName(languageStr);
+			if (language == null) {
+				System.out.println("Unrecognized language name.");
+				arguments.printHelp(SentenceSplitter.class.getCanonicalName());
+				return;
+			}
+			script = language.script;
+		}
+		if (normalize && language == null) {
+			System.out.println("Normalization requires language to be specified.");
+			return;
+		} else if (language == null && script == null) {
+			System.out.println("Either script or language must be specified.");
 			arguments.printHelp(SentenceSplitter.class.getCanonicalName());
 			return;
 		}
-		SentenceSplitter sentenceSplitter = SentenceSplitter.getInstance(script);
-		if (inputFilePath == null) {
-			return;
-		}
 		if (outputFilePath == null) {
-			outputFilePath = FileUtils.addSuffixToFilePath(inputFilePath, "_split");
+			String suffix = normalize ? "_normalized_split" : "_split";
+			outputFilePath = FileUtils.addSuffixToFilePath(inputFilePath, suffix);
 		}
-		System.out.println("Splitting text in " + inputFilePath);
-		sentenceSplitter.splitTextInFile(inputFilePath, outputFilePath);
+		System.out.println("Processing text in " + inputFilePath);
+		splitTextInFile(inputFilePath, outputFilePath, normalize, language, script);
 		System.out.println("Output saved to " + outputFilePath);
 	}
 }
