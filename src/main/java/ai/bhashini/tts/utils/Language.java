@@ -33,7 +33,7 @@ public enum Language {
 	Sanskrit(Script.Devanagari, "san", "sa", "संस्कृतम्"),
 	Auto(Script.English, "auto", "auto", "Detect"); // Placeholder for auto-detection of language during OCR
 
-	private Language(Script script, String threeLetterCode, String twoLetterCode, String nativeText, String bcp47Tag) {
+	Language(Script script, String threeLetterCode, String twoLetterCode, String nativeText, String bcp47Tag) {
 		this.script = script;
 		this.threeLetterCode = threeLetterCode;
 		this.twoLetterCode = twoLetterCode;
@@ -41,7 +41,7 @@ public enum Language {
 		this.bcp47Tag = bcp47Tag;
 	}
 
-	private Language(Script script, String threeLetterCode, String twoLetterCode, String nativeText) {
+	Language(Script script, String threeLetterCode, String twoLetterCode, String nativeText) {
 		this(script, threeLetterCode, twoLetterCode, nativeText, threeLetterCode + "_" + script.fourLetterCode);
 	}
 
@@ -51,14 +51,14 @@ public enum Language {
 	public final String nativeText;
 	public final String bcp47Tag;
 
-	public String getNativeAndEnglishName() {
+	public String getNameAlongWithNativeText() {
 		if (this == English) {
 			return name();
 		}
 		return name() + " (" + nativeText + ")";
 	}
 
-	public static Language fromNativeAndEnglishName(String combinedName) {
+	public static Language fromNameAlongWithNativeText(String combinedName) {
 		if (combinedName == null || combinedName.isBlank()) {
 			return null;
 		}
@@ -69,7 +69,7 @@ public enum Language {
 		int start = combinedName.indexOf('(');
 		int end = combinedName.indexOf(')');
 		if (start > -1 && end > -1) {
-			return fromName(combinedName.substring(start + 1, end).trim());
+			return fromName(combinedName.substring(0, start).trim());
 		}
 		return null;
 	}
@@ -100,8 +100,51 @@ public enum Language {
 		return null;
 	}
 
+	public static Language fromNativeText(String nativeText) {
+		for (Language language : Language.values()) {
+			if (language.nativeText.equals(nativeText)) {
+				return language;
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public String toString() {
-		return getNativeAndEnglishName();
+		return name();
+	}
+
+	public static Language fromString(String langStr) {
+		if (langStr == null || langStr.isBlank()) {
+			return null;
+		}
+		langStr = langStr.trim();
+		Language language = fromName(langStr);
+		if (language == null) {
+			language = fromTwoLetterCode(langStr.toLowerCase());
+			if (language == null) {
+				language = fromThreeLetterCode(langStr.toLowerCase());
+				if (language == null) {
+					language = fromNameAlongWithNativeText(langStr);
+					if (language == null) {
+						language = fromNativeText(langStr);
+					}
+				}
+			}
+		}
+		return language;
+	}
+
+	static void main() {
+		System.out.println(fromString("Hindi"));
+		System.out.println(fromString("hi"));
+		System.out.println(fromString("hin"));
+		System.out.println(fromString("Hindi (हिंदी)"));
+		System.out.println(fromString("हिंदी"));
+		System.out.println(fromString(" Hindi "));
+		System.out.println(fromString(" Hi"));
+		System.out.println(fromString(" Hin"));
+		System.out.println(fromString(" Hindi "));
+		System.out.println(fromString(" Hindi1 "));
 	}
 }
